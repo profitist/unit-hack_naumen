@@ -1,3 +1,25 @@
+from dotenv import load_dotenv
+import os
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher
+from app.handlers import router
 
-if __name__ == '__main__':
-    print("hello world")
+
+
+logging.basicConfig(level=logging.INFO)
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN)
+dp = Dispatcher()
+
+async def main():
+    dp.include_router(router)
+    logging.basicConfig(level=logging.INFO)
+    try:
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        print("Exit")
+
+if __name__ == "__main__":
+    asyncio.run(main())
