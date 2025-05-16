@@ -1,5 +1,5 @@
 from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -23,11 +23,6 @@ async def cmd_start(message: Message):
 async def get_help(message: Message):
     await message.answer("help")
 
-@router.message(F.text == "What?")
-async def what(message: Message):
-    await message.answer("what")
-
-
 # @router.callback_query(F.data == 'registration')
 # async def registration(callback:CallbackQuery):
 #     # TO DO
@@ -39,13 +34,13 @@ async def what(message: Message):
 @router.message(F.text == "Зарегистрироваться")
 async def start_registration(message: Message, state: FSMContext):
     await state.set_state(Reg.name)
-    await message.answer("Введите имя")
+    await message.answer("Введите имя", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(Command('reg'))
 async def reg_one(message: Message, state: FSMContext):
     await state.set_state(Reg.name)
-    await message.answer('Введите имя')
+    await message.answer('Введите имя', reply_markup=ReplyKeyboardRemove())
 
 @router.message(Reg.name)
 async def reg_two(message: Message, state: FSMContext):
