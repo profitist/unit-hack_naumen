@@ -1,7 +1,7 @@
 from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
                                 InlineKeyboardMarkup, InlineKeyboardButton)
 
-from aiogram.utils.keyboard import  ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 main = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Зарегистрироваться', callback_data='registration')]
@@ -10,15 +10,13 @@ main = InlineKeyboardMarkup(inline_keyboard=[
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Зарегистрироваться")],
-        [KeyboardButton(text="What?")]
     ],
     resize_keyboard=True
 )
 
 reply_test = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Пися")],
-        [KeyboardButton(text="What?")]
+        [KeyboardButton(text="Посмотреть события")],
     ],
     resize_keyboard=True
 )
