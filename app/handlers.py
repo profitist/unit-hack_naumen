@@ -1,5 +1,3 @@
-import os
-
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 from aiogram import F, Router
@@ -27,6 +25,7 @@ class Reg(StatesGroup):
 class Ask(StatesGroup):
     waiting_for_question = State()
 
+
 async def set_commands(bot):
     commands = [
         BotCommand(command="/start", description="Начало работы"),
@@ -50,7 +49,6 @@ async def cmd_start(message: Message):
 @router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
-
 
 
 # Запрос вопроса
@@ -147,7 +145,6 @@ async def reg_four(message: Message, state: FSMContext):
         await message.answer(
             "❌ Некорректный номер! Введите в формате +79991234567 или 89991234567. Попробуйте еще раз:")
         return
-
 
     await state.update_data(number=message.text)
     data = await state.get_data()
