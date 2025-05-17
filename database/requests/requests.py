@@ -51,10 +51,9 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
                     is_admin=user_instance.is_admin
                 )
                 session.add(new_user)
-                await session.flush()  # Получаем сгенерированный user_id
+                await session.flush()
                 return new_user
             return existing_user
-
 
 
 async def show_all_events():
