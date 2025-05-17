@@ -15,7 +15,7 @@ async def add_user_if_not_exists(user_instance : UserClass):
             new_user = User(user_id=user_instance.user_id, tg_id=user_instance.tg_id,
                             username=user_instance.username, first_name=user_instance.first_name,
                             last_name=user_instance.last_name, phone_number=user_instance.phone_number,
-                            is_adimn=user_instance.is_admin)
+                            is_admin=user_instance.is_admin)
             session.add(new_user)
             await session.commit()
 
@@ -31,5 +31,4 @@ async def is_admin(user_id: int) -> bool:
         if user is None:
             return False
         return user.is_admin
-
 
