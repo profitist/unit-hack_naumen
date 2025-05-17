@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 from aiogram import F, Router
@@ -9,7 +11,7 @@ import app.keyboards as kb
 import utils.text_utils as tu
 from utils.admin_utils import admin_required
 from source.working_classes import Event
-
+from database.requests.requests import add_event_if_not_exists
 
 admin_router = Router()
 
@@ -38,7 +40,8 @@ async def add_event_2(message: Message, state: FSMContext):
         await state.update_data(title=answer)
         await state.set_state(AddEvent.description)
         await message.answer(text='Введите описание события!')
-    await message.answer(text='Введенный заголовок не валиден')
+    else:
+        await message.answer(text='Введенный заголовок не валиден')
 
 
 @admin_router.message(AddEvent.description)
@@ -61,7 +64,8 @@ async def add_event_3(message: Message, state: FSMContext):
 async def add_event_4(message: Message, state: FSMContext):
     answer = message.text
     if val.is_valid_event_date(answer):
-        await state.update_data(date=answer)
+        date = datetime.strptime(answer, '%d.%m.%Y %H:%M:%S')
+        await state.update_data(date=date)
         await state.set_state(AddEvent.vacant_places)
         await message.answer(text=f'Ура! {state.get_value("title")} '
                                   f'будет проведен {state.get_value("date")}\n\n'
@@ -78,7 +82,7 @@ async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
     try:
         counter = int(answer)
-        await state.update_data(vacant_places=answer)
+        await state.update_data(vacant_places=counter)
         await state.set_state(AddEvent.address)
         await message.answer(text='Давай укажем адреc, '
                                   'по которому будет проводиться Ивент')
@@ -92,17 +96,17 @@ async def add_event_5(message: Message, state: FSMContext):
 async def add_event_end(message: Message, state: FSMContext):
     address = message.text
     await state.update_data(address=address)
-    data = state.get_data()
+    data = await state.get_data()
     if val.is_valid_location(address):
         event = Event(_title=data['title'], _description=data['description'],
-                      _start_time=data['date'], _vacant_places=data['vacant_places'],
+                      _start_time=data['date'],
+                      _vacant_places=data['vacant_places'],
                       _location=data['address'])
-        await rq.add_event_if_not_exists(event)
+        await add_event_if_not_exists(event)
         await message.answer("Событие добавлено")
         await state.clear()
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
-
 
 
 
