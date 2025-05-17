@@ -42,7 +42,7 @@ async def cmd_start(message: Message):
     is_admin = await rq.is_admin(message.from_user.id)
     if is_admin:
         await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=kb.main_reply)
+                             reply_markup=kb.admin)
     else:
         await message.answer(tu.send_start_common_user_message(message),
                              reply_markup=kb.main_reply)
