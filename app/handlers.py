@@ -8,6 +8,7 @@ import database.requests.requests as rq
 import app.keyboards as kb
 import utils.text_utils as tu
 from source.user import UserClass
+from database.requests.requests import add_user_if_not_exists
 
 ADMIN_CHAT_ID = -1002649837821
 # ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
@@ -50,6 +51,14 @@ async def cmd_start(message: Message):
 @router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
+
+@router.message(F.text == "О нас ℹ️")
+async def get_info(message: Message):
+    await message.answer(
+        'Я Бот - организатор мероприятий компании Naumen 😊\n\n'
+        'Помогу тебе узнать всю информацию о предстоящих мероприятиях'
+        'нашей компании, а также при желании зарегистрироваться на них.'
+    )
 
 
 # Запрос вопроса
@@ -191,6 +200,16 @@ async def reg_four(message: Message, state: FSMContext):
 
     await state.update_data(number=message.text)
     data = await state.get_data()
+    user = UserClass(
+        tg_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=data["first_name"],
+        last_name=data["second_name"],
+        phone=data["number"],
+        is_admin=False
+    )
+    await add_user_if_not_exists(user)
+
     await message.answer(
         f'✅ Регистрация завершена!\n'
         f'Имя: {data["first_name"]}\n'
