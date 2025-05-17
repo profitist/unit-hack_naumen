@@ -31,6 +31,7 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
                 return new_user
             return existing_user
 
+
 async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
@@ -40,45 +41,16 @@ async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
             existing_event = existing_event.scalar_one_or_none()
             if existing_event is None:
                 new_event = Event(
-                    _title=event_instance.title,
-                    _description=event_instance.description,
-                    _start_time=event_instance.start_time,
-                    _end_time=event_instance.end_time,
-                    _link=event_instance.link,
-                    _location=event_instance._location,
-                    _status=event_instance._status,
-                    _vacant_places=event_instance._vacant_places,
-                    _activities=event_instance._activities,
-                    _id=event_instance.id
+                    title=event_instance.title,
+                    description=event_instance.description,
+                    datetime=event_instance.start_time,
+                    vacant_places=event_instance._vacant_places,
+                    address=event_instance._location
                 )
                 session.add(new_event)
                 await session.flush()
                 return new_event
             return existing_event
-
-
-async def add_user_if_not_exists(user_instance: UserClass) -> User:
-    async with AsyncSessionLocal() as session:
-        async with session.begin():
-            # Ищем пользователя по tg_id (уникальному полю)
-            existing_user = await session.execute(
-                select(User).where(User.tg_id == user_instance.tg_id)
-            )
-            existing_user = existing_user.scalar_one_or_none()
-
-            if existing_user is None:
-                new_user = User(
-                    tg_id=user_instance.tg_id,
-                    username=user_instance.username,
-                    first_name=user_instance.first_name,
-                    last_name=user_instance.last_name,
-                    phone_number=user_instance.phone_number,
-                    is_admin=user_instance.is_admin
-                )
-                session.add(new_user)
-                await session.flush()
-                return new_user
-            return existing_user
 
 
 async def show_all_events():
