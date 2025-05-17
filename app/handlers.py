@@ -218,3 +218,13 @@ async def reg_four(message: Message, state: FSMContext):
         reply_markup=kb.reply_test
     )
     await state.clear()
+
+
+@router.message(F.text == "Актуальные события 🗓")
+async def get_all_events(message: Message):
+    events = await rq.show_all_events()
+    for event in events:
+        await message.answer(
+            f'{event.description}\n'
+            f'{event.datetime}'
+        )
