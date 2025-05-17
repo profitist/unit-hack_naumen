@@ -113,7 +113,6 @@ class Event:
     _title: str = field(init=True)
     _description: str = field(init=True)
     _start_time: datetime = field(init=True)
-    _end_time: datetime = field(init=True)
     _link: Optional[str] = field(init=True)
     _location: str = field(init=True)
     _status: Literal["offline", "online"] = field(init=True)
