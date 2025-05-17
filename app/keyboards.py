@@ -23,7 +23,13 @@ profile_reply = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-
+admin_menu = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Добавить новое событие")],
+        [KeyboardButton(text="Актуальные события 🗓")]
+    ],
+    resize_keyboard=True
+)
 
 back_reply = ReplyKeyboardMarkup(
     keyboard=[

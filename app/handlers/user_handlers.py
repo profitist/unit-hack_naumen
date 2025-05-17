@@ -32,7 +32,7 @@ async def cmd_start(message: Message):
     is_admin = await rq.is_admin(message.from_user.id)
     if is_admin:
         await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=kb.main_reply)
+                             reply_markup=kb.admin_menu)
     else:
         await message.answer(tu.send_start_common_user_message(message),
                              reply_markup=kb.main_reply)
@@ -85,15 +85,6 @@ async def reply_to_user(message: Message, bot):
             await message.answer("❌ Не найден ID пользователя в сообщении.")
     else:
         await message.answer("ℹ️ Ответ должен быть *на сообщение с вопросом*.", parse_mode="Markdown")
-
-
-
-# @user_router.callback_query(F.data == 'registration')
-# async def registration(callback:CallbackQuery):
-#     # TO DO
-#     # тут взаимодейтвие с бд для регистрации
-#     await callback.answer('')
-#     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
 
 
 @user_router.message(F.text == "⬅️ Назад")

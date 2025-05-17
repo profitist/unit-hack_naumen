@@ -8,17 +8,87 @@ import database.requests.requests as rq
 import app.keyboards as kb
 import utils.text_utils as tu
 from utils.admin_utils import admin_required
+from source.working_classes import Event
 
 admin_router = Router()
 
 
 class AddEvent(StatesGroup):
-    first_name = State()
-    second_name = State()
-    number = State()
+    title = State()
+    description = State()
+    date = State()
+    vacant_places = State()
+    address = State()
 
 
-@admin_router.message(Command('add_event'))
-async def add_event(message: Message):
-    await message.answer(text='Пора добавить новое событие!')
+@admin_required
+@admin_router.message(F.text == 'Добавить новое событие')
+async def add_event_1(message: Message, state: FSMContext):
+    await state.set_state(AddEvent.title)
+    await message.answer(text='Пора добавить новое событие!'
+                              ' Введите имя события:')
+
+
+@admin_required
+@admin_router.message(AddEvent.title)
+async def add_event_2(message: Message, state: FSMContext):
+    answer = message.text
+    await state.update_data(title=answer)
+    await state.set_state(AddEvent.description)
+    await message.answer(text='Введите описание события!')
+
+
+@admin_required
+@admin_router.message(AddEvent.description)
+async def add_event_3(message: Message, state: FSMContext):
+    answer = message.text
+    await state.update_data(description=answer)
+    await state.set_state(AddEvent.date)
+    await message.answer(text='Отлично, описание добавлено\n!'
+                              'Давайте назначим дату: Введите ее в формате '
+                              '{дд.мм.гггг}')
+
+
+@admin_required
+@admin_router.message(AddEvent.date)
+async def add_event_4(message: Message, state: FSMContext):
+    answer = message.text
+    await state.update_data(date=answer)
+    await state.set_state(AddEvent.vacant_places)
+    await message.answer(text=f'Ура! {state.get_value('title')} '
+                              f'будет проведен {state.get_value('date')}\n\n'
+                              f'Давай укажем максимальное число участников')
+
+
+@admin_required
+@admin_router.message(AddEvent.vacant_places)
+async def add_event_5(message: Message, state: FSMContext):
+    answer = message.text
+    await state.update_data(vacant_places=answer)
+    await state.set_state(AddEvent.address)
+    await message.answer(text='Давай укажем адреc, '
+                              'по которому будет проводиться Ивент')
+
+
+@admin_required
+@admin_router.message(AddEvent.address)
+async def add_event_end(message: Message, state: FSMContext):
+    address = message.text
+    await state.update_data(address=address)
+    data = state.get_data()
+    event = Event(_title=data['title'], _description=data['description'],
+                  _start_time=data['date'], _vacant_places=data['vacant_places'],
+                  _location=data['address'])
+
+    await state.clear()
+
+
+
+
+
+
+
+
+
+
 

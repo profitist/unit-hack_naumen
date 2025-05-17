@@ -2,22 +2,28 @@ from sqlalchemy import select, insert, delete
 from database.session import AsyncSessionLocal
 from database.models.models import User
 from source.user import UserClass
+from source.working_classes import Event
 
 
-async def add_user_if_not_exists(user_instance : UserClass):
+async def add_user_if_not_exists(user_instance: UserClass) -> User:
     async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(User).where(user_instance.user_id == User.user_id)
-        )
-        user = result.scalar_one_or_none()
+        async with session.begin():
+            existing_user = await session.get(User, user_instance.user_id)
 
-        if user is None:
-            new_user = User(user_id=user_instance.user_id, tg_id=user_instance.tg_id,
-                            username=user_instance.username, first_name=user_instance.first_name,
-                            last_name=user_instance.last_name, phone_number=user_instance.phone_number,
-                            is_admin=user_instance.is_admin)
-            session.add(new_user)
-            await session.commit()
+            if existing_user is None:
+                new_user = User(
+                    user_id=user_instance.user_id,
+                    tg_id=user_instance.tg_id,
+                    username=user_instance.username,
+                    first_name=user_instance.first_name,
+                    last_name=user_instance.last_name,
+                    phone_number=user_instance.phone_number,
+                    is_admin=user_instance.is_admin
+                )
+                session.add(new_user)
+                await session.flush()
+                return new_user
+            return existing_user
 
 
 async def is_admin(user_id: int) -> bool:
@@ -32,3 +38,6 @@ async def is_admin(user_id: int) -> bool:
             return False
         return user.is_admin
 
+
+async def add_event(event: Event):
+    pass

@@ -10,13 +10,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class Activity:
-    _id: str = field(init=True)
     _name: str = field(init=True)
     _location: Optional[str] = field(init=True)
     _datetime: datetime = field(init=True)
     _link: Optional[str] = field(init=True)
     _event: 'Event' = field(init=True)
     _attendees: Dict[int, bool] = field(default_factory=dict)
+    _id: str = field(init=True, default=None)
 
     @property
     def id(self) -> str:
@@ -99,14 +99,16 @@ class Activity:
 
 @dataclass
 class Event:
-    _id: str = field(init=True)
     _title: str = field(init=True)
     _description: str = field(init=True)
     _start_time: datetime = field(init=True)
     _end_time: datetime = field(init=True)
     _link: Optional[str] = field(init=True)
+    _location: str = field(init=True)
     _status: Literal["offline", "online"] = field(init=True)
+    _vacant_places: int = field(init=True)
     _activities: List[Activity] = field(default_factory=list)
+    _id: str = field(init=True, default=None)
 
     @property
     def id(self) -> str:

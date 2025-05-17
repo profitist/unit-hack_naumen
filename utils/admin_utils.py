@@ -3,13 +3,13 @@ import database.requests.requests as rq
 
 
 async def admin_required(func):
-    async def wrapper(message: Message):
+    async def wrapper(message: Message, *args, **kwargs):
         is_admin = rq.is_admin(message.from_user.id)
-        if is_admin:
+        if not is_admin:
             await message.answer(text='Вы не являетесь организатором '
                                       'мероприятия!\n'
                                       'Вернитесь в главное меню!')
             return
         else:
             return await func(message)
-    return await func
+    return wrapper
