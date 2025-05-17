@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 class Activity:
     _name: str = field(init=True)
     _location: Optional[str] = field(init=True)
-    _datetime: datetime = field(init=True)
+    _start_time: datetime = field(init=True)
+    _end_time: datetime = field(init=True)
     _link: Optional[str] = field(init=True)
     _event: 'Event' = field(init=True)
     _attendees: Dict[int, bool] = field(default_factory=dict)
@@ -49,14 +50,24 @@ class Activity:
         self._location = value
 
     @property
-    def datetime(self) -> datetime:
-        return self._datetime
+    def start_time(self) -> datetime:
+        return self._start_time
 
-    @datetime.setter
+    @start_time.setter
     def datetime(self, value: datetime) -> None:
         if not isinstance(value, datetime):
             raise ValueError("Дата и время должны быть объектом datetime")
-        self._datetime = value
+        self._start_time = value
+
+    @property
+    def end_time(self) -> datetime:
+        return self._end_time
+
+    @end_time.setter
+    def datetime(self, value: datetime) -> None:
+        if not isinstance(value, datetime):
+            raise ValueError("Дата и время должны быть объектом datetime")
+        self._end_time = value
 
     @property
     def link(self) -> Optional[str]:
@@ -194,15 +205,16 @@ class Event:
             raise ValueError("Activities должен быть списком")
         self._activities = value
 
-    def add_activity(self, name: str, location: Optional[str], link: Optional[str], datetime: datetime) -> Activity:
-        if not (self._start_time <= datetime <= self._end_time):
+    def add_activity(self, name: str, location: Optional[str], link: Optional[str], start_time: datetime, end_time: datetime) -> Activity:
+        if not (self._start_time <= start_time <= self._end_time and self._start_time <= end_time <= self._end_time):
             raise ValueError("Дата и время активности должны быть в пределах времени события")
         activity = Activity(
             _id=str(uuid.uuid4()),
             _name=name,
             _location=location,
             _link=link,
-            _datetime=datetime,
+            _start_time=start_time,
+            _end_time=end_time,
             _event=self
         )
         self._activities.append(activity)

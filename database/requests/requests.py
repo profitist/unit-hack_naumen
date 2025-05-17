@@ -2,12 +2,16 @@ from sqlalchemy import select, insert, delete
 from database.session import AsyncSessionLocal
 from database.models.models import User
 from source.user import UserClass
+from database.models.models import UserEventConnect
+from database.models.models import Event
 from source.working_classes import Event
+
 
 
 async def add_user_if_not_exists(user_instance: UserClass) -> User:
     async with AsyncSessionLocal() as session:
         async with session.begin():
+            # Ищем пользователя по tg_id (уникальному полю)
             existing_user = await session.execute(
                 select(User).where(User.tg_id == user_instance.tg_id)
             )
@@ -23,9 +27,41 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
                     is_admin=user_instance.is_admin
                 )
                 session.add(new_user)
-                await session.flush()
+                await session.flush()  # Получаем сгенерированный user_id
                 return new_user
             return existing_user
+
+
+async def show_all_events_of_user(user_id):
+    async with AsyncSessionLocal() as session:
+        current_datetime = datetime.now()
+
+        result = await session.execute(
+            select(Event)
+            .join(UserEventConnect, Event.id == UserEventConnect.event_id)
+            .where(
+                and_(
+                    UserEventConnect.tg_id == user_id,
+                    Event.datetime >= current_datetime
+                )
+            )
+            .order_by(Event.datetime.asc())
+        )
+
+        events = result.scalars().all()
+        return events if events else []
+
+
+async def show_all_events():
+    async with AsyncSessionLocal() as session:
+        current_datetime = datetime.now()
+        result = await session.execute(
+            select(Event)
+            .where(Event.datetime >= current_datetime)
+            .order_by(Event.datetime.asc())
+        )
+        events = result.scalars().all()
+        return events if events else []
 
 
 async def is_admin(user_id: int) -> bool:
@@ -41,5 +77,8 @@ async def is_admin(user_id: int) -> bool:
         return user.is_admin
 
 
-async def add_event(event: Event):
-    pass
+async def user_id_by_tg_id(tg_id):
+    return True
+# TO DO
+
+
