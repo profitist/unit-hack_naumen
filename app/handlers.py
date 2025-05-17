@@ -7,6 +7,7 @@ import app.validators as val
 import database.requests.requests as rq
 import app.keyboards as kb
 import utils.text_utils as tu
+from source.user import UserClass
 
 ADMIN_CHAT_ID = -1002649837821
 # ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
