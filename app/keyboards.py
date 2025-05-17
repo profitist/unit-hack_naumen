@@ -29,4 +29,3 @@ async def inline_manus():
     for man in manus:
         keyboard.add(InlineKeyboardButton(text=man, url='https://github.com/Platonn3'))
     return keyboard.adjust(1).as_markup()
-
