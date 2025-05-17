@@ -1,3 +1,4 @@
+from aiogram.dispatcher import router
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 from aiogram import F, Router
@@ -113,20 +114,24 @@ async def reply_to_user(message: Message, bot):
 #     await callback.answer('')
 #     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
 
-@user_router.message(F.text == "⬅️ Назад")
-async def go_back(message: Message, state: FSMContext):
+
+@user_router.callback_query(F.data == "back_in_reg")
+async def go_back(callback: CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
 
     if current_state == Reg.second_name:
         await state.set_state(Reg.first_name)
-        await message.answer("Введите имя (только буквы, от 2 до 30 символов):", reply_markup=kb.back_reply)
+        await callback.message.answer()
+        await callback.message.answer("Введите имя (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     elif current_state == Reg.number:
         await state.set_state(Reg.second_name)
-        await message.answer("Введите фамилию (только буквы, от 2 до 30 символов):", reply_markup=kb.back_reply)
+        await callback.message.answer()
+        await callback.message.answer("Введите фамилию (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     else:
-        await message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
+        await callback.message.answer()
+        await callback.message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
         await state.clear()
 
 
@@ -134,7 +139,7 @@ async def go_back(message: Message, state: FSMContext):
 async def start_registration(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
     await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
-                         reply_markup=kb.back_reply)
+                         reply_markup=kb.reg_back_inline)
 
 
 @user_router.message(F.text == "Мой профиль")
@@ -153,7 +158,7 @@ async def start_registration(message: Message):
 async def reg_one(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
     await message.answer('Введите имя (только буквы, от 2 до 30 символов)',
-                         reply_markup=kb.back_reply)
+                         reply_markup=kb.reg_back_inline)
 
 
 @user_router.message(Reg.first_name)
@@ -162,13 +167,13 @@ async def reg_two(message: Message, state: FSMContext):
         return await go_back(message, state)
     if not val.is_valid_first_name(message.text):
         await message.answer("❌ Некорректное имя! Используйте только буквы (2-30 символов). Попробуйте еще раз:"
-                             ,reply_markup=kb.back_reply)
+                             , reply_markup=kb.reg_back_inline)
         return
 
     await state.update_data(first_name=message.text)
     await state.set_state(Reg.second_name)
     await message.answer('✅ Принято! Теперь введите фамилию (только буквы, от 2 до 30 символов)'
-                         ,reply_markup=kb.back_reply)
+                         , reply_markup=kb.reg_back_inline)
 
 
 @user_router.message(Reg.second_name)
@@ -178,13 +183,13 @@ async def reg_three(message: Message, state: FSMContext):
 
     if not val.is_valid_second_name(message.text):
         await message.answer("❌ Некорректная фамилия! Используйте только буквы (2-30 символов). Попробуйте еще раз:"
-                             ,reply_markup=kb.back_reply)
+                             , reply_markup=kb.reg_back_inline)
         return
 
     await state.update_data(second_name=message.text)
     await state.set_state(Reg.number)
     await message.answer('✅ Принято! Теперь введите номер телефона в формате +79991234567 или 89991234567'
-                         ,reply_markup=kb.back_reply)
+                         , reply_markup=kb.reg_back_inline)
 
 
 @user_router.message(Reg.number)
@@ -195,7 +200,7 @@ async def reg_four(message: Message, state: FSMContext):
     if not val.is_valid_phone_number(message.text):
         await message.answer(
             "❌ Некорректный номер! Введите в формате +79991234567 или 89991234567. Попробуйте еще раз:"
-         ,reply_markup=kb.back_reply)
+         ,reply_markup=kb.reg_back_inline)
         return
 
     await state.update_data(number=message.text)
