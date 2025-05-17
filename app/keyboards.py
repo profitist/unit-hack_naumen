@@ -9,10 +9,8 @@ main = InlineKeyboardMarkup(inline_keyboard=[
 
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Зарегистрироваться")],
-        [KeyboardButton(text="Задать вопрос")]
         [KeyboardButton(text="Зарегистрироваться ✔"), KeyboardButton(text="Актуальные события 🗓")],
-        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️")],
+        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")],
         [KeyboardButton(text="Назад")]
     ],
     resize_keyboard=True
@@ -21,7 +19,7 @@ main_reply = ReplyKeyboardMarkup(
 reply_test = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Акутуальные события 🗓")],
-        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️")]
+        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")]
     ],
     resize_keyboard=True
 )
