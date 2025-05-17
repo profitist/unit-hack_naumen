@@ -113,10 +113,9 @@ class Event:
     _title: str = field(init=True)
     _description: str = field(init=True)
     _start_time: datetime = field(init=True)
-    _end_time: datetime = field(init=True)
-    _link: Optional[str] = field(init=True)
+    _link: Optional[str] = field(init=False)
     _location: str = field(init=True)
-    _status: Literal["offline", "online"] = field(init=True)
+    _status: Literal["offline", "online"] = field(init=False)
     _vacant_places: int = field(init=True)
     _activities: List[Activity] = field(default_factory=list)
     _id: str = field(init=True, default=None)
@@ -164,36 +163,6 @@ class Event:
         if hasattr(self, '_end_time') and value > self._end_time:
             raise ValueError("Время начала не может быть позже времени окончания")
         self._start_time = value
-
-    @property
-    def end_time(self) -> datetime:
-        return self._end_time
-
-    @end_time.setter
-    def end_time(self, value: datetime) -> None:
-        if not isinstance(value, datetime):
-            raise ValueError("Время окончания должно быть объектом datetime")
-        if value < self._start_time:
-            raise ValueError("Время окончания не может быть раньше времени начала")
-        self._end_time = value
-
-    @property
-    def link(self) -> Optional[str]:
-        return self._link
-
-    @link.setter
-    def link(self, value: Optional[str]) -> None:
-        self._link = value
-
-    @property
-    def status(self) -> Literal["offline", "online"]:
-        return self._status
-
-    @status.setter
-    def status(self, value: Literal["offline", "online"]) -> None:
-        if value not in ["offline", "online"]:
-            raise ValueError("Статус должен быть 'offline' или 'online'")
-        self._status = value
 
     @property
     def activities(self) -> List[Activity]:

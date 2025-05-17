@@ -4,7 +4,7 @@ from database.models.models import User
 from source.user import UserClass
 from database.models.models import UserEventConnect
 from database.models.models import Event
-from source.working_classes import Event
+from source.working_classes import Event as EventDTO
 from datetime import datetime
 
 
@@ -32,28 +32,25 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
             return existing_user
 
 
-async def add_user_if_not_exists(user_instance: UserClass) -> User:
+async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
-            # Ищем пользователя по tg_id (уникальному полю)
-            existing_user = await session.execute(
-                select(User).where(User.tg_id == user_instance.tg_id)
+            existing_event = await session.execute(
+                select(Event).where(Event.id == event_instance.id)
             )
-            existing_user = existing_user.scalar_one_or_none()
-
-            if existing_user is None:
-                new_user = User(
-                    tg_id=user_instance.tg_id,
-                    username=user_instance.username,
-                    first_name=user_instance.first_name,
-                    last_name=user_instance.last_name,
-                    phone_number=user_instance.phone_number,
-                    is_admin=user_instance.is_admin
+            existing_event = existing_event.scalar_one_or_none()
+            if existing_event is None:
+                new_event = Event(
+                    title=event_instance.title,
+                    description=event_instance.description,
+                    datetime=event_instance.start_time,
+                    vacant_places=event_instance._vacant_places,
+                    address=event_instance._location
                 )
-                session.add(new_user)
+                session.add(new_event)
                 await session.flush()
-                return new_user
-            return existing_user
+                return new_event
+            return existing_event
 
 
 async def show_all_events():

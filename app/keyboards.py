@@ -36,12 +36,13 @@ admin_menu = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
-back_reply = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="⬅️ Назад")]
-    ],
-    resize_keyboard=True
+reg_back_inline = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_in_reg")]
+    ]
 )
+
+
 
 reply_test = ReplyKeyboardMarkup(
     keyboard=[
