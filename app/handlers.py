@@ -225,5 +225,6 @@ async def get_all_events(message: Message):
     events = await rq.show_all_events()
     for event in events:
         await message.answer(
-
+            f'{event.description}\n'
+            f'{event.datetime}'
         )
