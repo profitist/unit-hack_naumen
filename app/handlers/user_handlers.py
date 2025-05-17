@@ -31,18 +31,17 @@ class Ask(StatesGroup):
 
 async def set_commands(bot):
     commands = [
-        BotCommand(command="/start", description="Начало работы"),
+        BotCommand(command="/start_chat", description="Начало работы"),
         BotCommand(command="/help", description="Помощь"),
         BotCommand(command="/reg", description="Регистрация"),
     ]
     await bot.set_my_commands(commands)
 
 
+
 @user_router.message(CommandStart(deep_link=True))
 async def cmd_start(message: Message, command: CommandObject):
-    if command.args == 'test':
-        await message.answer("Вот тебе помощь!")
-    else:
+    if command.args is None:
         is_admin = await rq.is_admin(message.from_user.id)
         if is_admin:
             await message.answer(tu.send_start_admin_user_message(message),
@@ -50,6 +49,19 @@ async def cmd_start(message: Message, command: CommandObject):
         else:
             await message.answer(tu.send_start_common_user_message(message),
                                  reply_markup=kb.main_reply)
+    if command.args == 'test':
+        await message.answer("Вот тебе помощь!")
+
+
+@user_router.message(Command("start_chat"))
+async def get_start(message: Message):
+    is_admin = await rq.is_admin(message.from_user.id)
+    if is_admin:
+        await message.answer(tu.send_start_admin_user_message(message),
+                             reply_markup=kb.admin)
+    else:
+        await message.answer(tu.send_start_common_user_message(message),
+                             reply_markup=kb.main_reply)
 
 
 @user_router.message(Command("help"))

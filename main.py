@@ -4,6 +4,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from app.handlers.handlers import register_all_handlers
 from database.session import init_db
+from app.handlers.user_handlers import set_commands
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -13,6 +14,7 @@ register_all_handlers(dp)
 
 
 async def main():
+    await set_commands(bot)
     try:
         await dp.start_polling(bot)
     except KeyboardInterrupt:

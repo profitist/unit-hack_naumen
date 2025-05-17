@@ -83,3 +83,22 @@ async def user_id_by_tg_id(tg_id):
 # TO DO
 
 
+async def show_all_events_of_user(user_instance: UserClass):
+    async with AsyncSessionLocal() as session:
+        current_datetime = datetime.now()
+
+        # Получаем все мероприятия пользователя через связующую таблицу
+        result = await session.execute(
+            select(Event)
+            .join(UserEventConnect, Event.id == UserEventConnect.event_id)
+            .where(
+                and_(
+                    UserEventConnect.user_id == user_instance.user_id,
+                    Event.datetime >= current_datetime  # Только будущие события
+                )
+            )
+            .order_by(Event.datetime.asc())  # Сортировка по дате
+        )
+
+        return result.scalars().all()
+
