@@ -31,3 +31,5 @@ async def is_admin(user_id: int) -> bool:
         if user is None:
             return False
         return user.is_admin
+
+
