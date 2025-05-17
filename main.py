@@ -11,7 +11,7 @@ from database.session import init_db
 
 logging.basicConfig(level=logging.INFO)
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_TOKEN = os.getenv("BOT_TOKEN2")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 

@@ -4,19 +4,26 @@ from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 main = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Зарегистрироваться', callback_data='registration')]
+    [InlineKeyboardButton(text='Зарегистрироваться ✔', callback_data='registration')]
 ])
 
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Зарегистрироваться")],
+        [KeyboardButton(text="Зарегистрироваться ✔"), KeyboardButton(text="Актуальные события 🗓")],
+        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️")],
+        [KeyboardButton(text="Назад")]
     ],
     resize_keyboard=True
 )
 
+inline = InlineKeyboardMarkup(inline_keyboard=[
+    []
+])
+
 reply_test = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Посмотреть события")],
+        [KeyboardButton(text="Акутуальные события 🗓")],
+        [KeyboardButton(text="Помощь 🫂"), KeyboardButton(text="О нас ℹ️")]
     ],
     resize_keyboard=True
 )

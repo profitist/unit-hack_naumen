@@ -33,15 +33,8 @@ async def cmd_start(message: Message):
 async def get_help(message: Message):
     await message.answer("help")
 
-# @router.callback_query(F.data == 'registration')
-# async def registration(callback:CallbackQuery):
-#     # TO DO
-#     # тут взаимодейтвие с бд для регистрации
-#     await callback.answer('')
-#     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
 
-
-@router.message(F.text == "Зарегистрироваться")
+@router.message(F.text == "Зарегистрироваться ✔")
 async def start_registration(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
     await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
@@ -74,7 +67,7 @@ async def reg_three(message: Message, state: FSMContext):
 
     await state.update_data(second_name=message.text)
     await state.set_state(Reg.number)
-    await message.answer('✅ Принято! Теперь введите номер телефона в формате +79991234567 или 89991234567')
+    await message.answer('✅ Принято! Теперь введите номер телефона в формате (+79991234567) или (89991234567)')
 
 
 @router.message(Reg.number)
