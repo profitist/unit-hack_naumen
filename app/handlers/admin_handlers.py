@@ -9,7 +9,7 @@ import app.keyboards as kb
 import utils.text_utils as tu
 from utils.admin_utils import admin_required
 from source.working_classes import Event
-from database.requests.requests import add_event_if_not_exists
+
 
 admin_router = Router()
 
@@ -93,21 +93,16 @@ async def add_event_end(message: Message, state: FSMContext):
     address = message.text
     await state.update_data(address=address)
     data = state.get_data()
-    event = Event(_title=data['title'], _description=data['description'],
-                  _start_time=data['date'], _vacant_places=data['vacant_places'],
-                  _location=data['address'])
-    await add_event_if_not_exists(event)
-    await message.answer("Событие добавлено")
-    await state.clear()
     if val.is_valid_location(address):
-        data = state.get_data()
         event = Event(_title=data['title'], _description=data['description'],
                       _start_time=data['date'], _vacant_places=data['vacant_places'],
                       _location=data['address'])
-
+        await rq.add_event_if_not_exists(event)
+        await message.answer("Событие добавлено")
         await state.clear()
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
+
 
 
 
