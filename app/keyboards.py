@@ -3,9 +3,13 @@ from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
 
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-main = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Зарегистрироваться', callback_data='registration')]
-])
+admin = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Добавить новое событие")],
+        [KeyboardButton(text="Актуальные события 🗓")]
+    ],
+    resize_keyboard=True
+)
 
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
