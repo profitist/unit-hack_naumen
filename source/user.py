@@ -19,7 +19,7 @@ class UserClass:
         self.phone_number = phone
         self.is_admin = is_admin
 
-    def generate_qr_code(self, event: Event | Activity, filename="qrcode.png"):
+    async def generate_qr_code(self, event: Event | Activity, filename="qrcode.png"):
         data = {
             "user": {
                 "user_id": self.user_id,
@@ -33,15 +33,15 @@ class UserClass:
             }
         }
 
-        data_str = json.dumps(data)
+        data_json = json.dumps(data)
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=10,
             border=4,
         )
-        qr.add_data(data_str)
+        qr.add_data(data_json)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         img.save(filename)
-        return os.path.abspath(filename)
+        return os.path.abspath(filename), data_json
