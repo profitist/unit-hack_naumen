@@ -121,16 +121,16 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
     if current_state == Reg.second_name:
         await state.set_state(Reg.first_name)
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Введите имя (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     elif current_state == Reg.number:
         await state.set_state(Reg.second_name)
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Введите фамилию (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     else:
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
         await state.clear()
 
