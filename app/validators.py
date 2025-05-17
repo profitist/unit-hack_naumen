@@ -1,5 +1,5 @@
 import re
-import datetime
+from datetime import datetime
 
 
 def is_valid_first_name(name: str) -> bool:
