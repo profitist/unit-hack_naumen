@@ -10,7 +10,8 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "users"
-    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
+                                         autoincrement=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     username: Mapped[str | None] = mapped_column(String(50))
     first_name: Mapped[str | None] = mapped_column(String(100))
@@ -22,7 +23,8 @@ class User(Base):
 class Event(Base):
     __tablename__ = "events"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
+                                    autoincrement=True)
     title: Mapped[str | None] = mapped_column(String(100))
     description: Mapped[str | None] = mapped_column(Text)
     datetime: Mapped[datetime | None] = mapped_column(
@@ -63,7 +65,8 @@ class EventWaitingList(Base):
 class MasterClass(Base):
     __tablename__ = "master_class"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
+                                    autoincrement=True)
     event_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("events.id", ondelete="CASCADE"))
     title: Mapped[str | None] = mapped_column(String(100))

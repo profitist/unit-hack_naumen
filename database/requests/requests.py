@@ -8,11 +8,13 @@ from source.working_classes import Event
 async def add_user_if_not_exists(user_instance: UserClass) -> User:
     async with AsyncSessionLocal() as session:
         async with session.begin():
-            existing_user = await session.get(User, user_instance.user_id)
+            existing_user = await session.execute(
+                select(User).where(User.tg_id == user_instance.tg_id)
+            )
+            existing_user = existing_user.scalar_one_or_none()
 
             if existing_user is None:
                 new_user = User(
-                    user_id=user_instance.user_id,
                     tg_id=user_instance.tg_id,
                     username=user_instance.username,
                     first_name=user_instance.first_name,

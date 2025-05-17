@@ -21,16 +21,16 @@ class AddEvent(StatesGroup):
     address = State()
 
 
-@admin_required
 @admin_router.message(F.text == 'Добавить новое событие')
+@admin_required
 async def add_event_1(message: Message, state: FSMContext):
     await state.set_state(AddEvent.title)
     await message.answer(text='Пора добавить новое событие!'
                               ' Введите имя события:')
 
 
-@admin_required
 @admin_router.message(AddEvent.title)
+@admin_required
 async def add_event_2(message: Message, state: FSMContext):
     answer = message.text
     await state.update_data(title=answer)
@@ -38,8 +38,8 @@ async def add_event_2(message: Message, state: FSMContext):
     await message.answer(text='Введите описание события!')
 
 
-@admin_required
 @admin_router.message(AddEvent.description)
+@admin_required
 async def add_event_3(message: Message, state: FSMContext):
     answer = message.text
     await state.update_data(description=answer)
@@ -49,8 +49,8 @@ async def add_event_3(message: Message, state: FSMContext):
                               '{дд.мм.гггг}')
 
 
-@admin_required
 @admin_router.message(AddEvent.date)
+@admin_required
 async def add_event_4(message: Message, state: FSMContext):
     answer = message.text
     await state.update_data(date=answer)
@@ -60,8 +60,8 @@ async def add_event_4(message: Message, state: FSMContext):
                               f'Давай укажем максимальное число участников')
 
 
-@admin_required
 @admin_router.message(AddEvent.vacant_places)
+@admin_required
 async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
     await state.update_data(vacant_places=answer)
@@ -70,8 +70,8 @@ async def add_event_5(message: Message, state: FSMContext):
                               'по которому будет проводиться Ивент')
 
 
-@admin_required
 @admin_router.message(AddEvent.address)
+@admin_required
 async def add_event_end(message: Message, state: FSMContext):
     address = message.text
     await state.update_data(address=address)
