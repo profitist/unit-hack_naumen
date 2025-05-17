@@ -1,5 +1,5 @@
 from aiogram.dispatcher import router
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
@@ -38,15 +38,18 @@ async def set_commands(bot):
     await bot.set_my_commands(commands)
 
 
-@user_router.message(CommandStart())
-async def cmd_start(message: Message):
-    is_admin = await rq.is_admin(message.from_user.id)
-    if is_admin:
-        await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=kb.main_reply)
+@user_router.message(CommandStart(deep_link=True))
+async def cmd_start(message: Message, command: CommandObject):
+    if command.args == 'test':
+        await message.answer("Вот тебе помощь!")
     else:
-        await message.answer(tu.send_start_common_user_message(message),
-                             reply_markup=kb.main_reply)
+        is_admin = await rq.is_admin(message.from_user.id)
+        if is_admin:
+            await message.answer(tu.send_start_admin_user_message(message),
+                                 reply_markup=kb.main_reply)
+        else:
+            await message.answer(tu.send_start_common_user_message(message),
+                                 reply_markup=kb.main_reply)
 
 
 @user_router.message(Command("help"))
@@ -121,16 +124,16 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
     if current_state == Reg.second_name:
         await state.set_state(Reg.first_name)
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Введите имя (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     elif current_state == Reg.number:
         await state.set_state(Reg.second_name)
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Введите фамилию (только буквы, от 2 до 30 символов):", reply_markup=kb.reg_back_inline)
 
     else:
-        await callback.message.answer()
+        await callback.answer('')
         await callback.message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
         await state.clear()
 
@@ -232,4 +235,7 @@ async def get_all_events(message: Message):
         await message.answer(
             f'{event.description}\n'
             f'{event.datetime}'
+            " <a href='https://t.me/naume_pivo_n_bot?start'>Подробнее</a>",
+            parse_mode="HTML"
         )
+
