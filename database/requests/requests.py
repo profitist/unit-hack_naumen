@@ -1,11 +1,11 @@
-from sqlalchemy import select, insert, delete
+from sqlalchemy import select, insert, delete, and_
 from database.session import AsyncSessionLocal
 from database.models.models import User
 from source.user import UserClass
 from database.models.models import UserEventConnect
 from database.models.models import Event
 from source.working_classes import Event
-
+from datetime import datetime
 
 
 async def add_user_if_not_exists(user_instance: UserClass) -> User:
