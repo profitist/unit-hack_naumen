@@ -1,7 +1,7 @@
 import qrcode
 import json
 import os
-from working_classes import Event, Activity
+from source.working_classes import Event, Activity
 
 class UserClass:
     def __init__(self, user_id: int = None,
@@ -24,7 +24,7 @@ class UserClass:
             "user": {
                 "user_id": self.user_id,
                 "name": self.username,
-                "email": self.phone_number
+                "phone": self.phone_number
             },
             "event": {
                 "event_id": event.id,
