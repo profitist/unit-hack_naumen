@@ -21,4 +21,6 @@ async def is_admin(user_id: int) -> bool:
         result = await session.execute(
             select(User).where(user_id == User.user_id)
         )
-        pass
+        user = result.scalar_one_or_none()
+        return user.is_admin
+
