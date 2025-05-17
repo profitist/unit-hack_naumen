@@ -3,8 +3,9 @@ from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemov
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-
+import database.requests.requests as rq
 import app.keyboards as kb
+import utils.text_utils as tu
 
 router = Router()
 
@@ -12,6 +13,7 @@ router = Router()
 class Reg(StatesGroup):
     name = State()
     number = State()
+
 
 async def set_commands(bot):
     commands = [
@@ -24,12 +26,19 @@ async def set_commands(bot):
 
 @router.message(CommandStart())
 async def cmd_start(message: Message):
-    await message.answer(f"Привет, {message.from_user.first_name}",
-                         reply_markup=kb.main_reply)
+    is_admin = rq.is_admin(message.from_user.id)
+    if is_admin:
+        await message.answer(tu.send_start_admin_user_message(message),
+                             reply_markup=kb.main_reply)
+    else:
+        await message.answer(tu.send_start_common_user_message(message),
+                             reply_markup=kb.main_reply)
+
 
 @router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
+
 
 # @router.callback_query(F.data == 'registration')
 # async def registration(callback:CallbackQuery):

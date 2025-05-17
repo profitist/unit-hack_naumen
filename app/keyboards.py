@@ -24,6 +24,8 @@ reply_test = ReplyKeyboardMarkup(
 settings = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='ХУЙЧИК', url='https://unit-ekb.ru/')]])
 
 manus = ['Platonn228', 'IVANUS', 'STEPA', 'ZALUPA']
+
+
 async def inline_manus():
     keyboard = InlineKeyboardBuilder()
     for man in manus:

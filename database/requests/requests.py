@@ -22,5 +22,7 @@ async def is_admin(user_id: int) -> bool:
             select(User).where(user_id == User.user_id)
         )
         user = result.scalar_one_or_none()
+        if user is None:
+            return False
         return user.is_admin
 
