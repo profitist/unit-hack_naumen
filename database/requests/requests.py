@@ -25,7 +25,7 @@ async def add_user_if_not_exists(user_instance: UserClass):
             await session.commit()
 
 
-async def show_all_events_of_user(user_instance: UserClass):
+async def show_all_events_of_user(user_id):
     async with AsyncSessionLocal() as session:
         current_datetime = datetime.now()
 
@@ -34,7 +34,7 @@ async def show_all_events_of_user(user_instance: UserClass):
             .join(UserEventConnect, Event.id == UserEventConnect.event_id)
             .where(
                 and_(
-                    UserEventConnect.user_id == user_instance.user_id,
+                    UserEventConnect.tg_id == user_id,
                     Event.datetime >= current_datetime
                 )
             )
@@ -43,6 +43,7 @@ async def show_all_events_of_user(user_instance: UserClass):
 
         events = result.scalars().all()
         return events if events else []
+
 
 async def show_all_events():
     async with AsyncSessionLocal() as session:
@@ -67,4 +68,10 @@ async def is_admin(user_id: int) -> bool:
         if user is None:
             return False
         return user.is_admin
+
+
+async def user_id_by_tg_id(tg_id):
+    return True
+# TO DO
+
 
