@@ -2,6 +2,7 @@ from datetime import datetime
 
 from aiogram.filters import CommandStart, Command
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
+from main import Bot
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
@@ -11,6 +12,7 @@ import app.keyboards as kb
 import utils.text_utils as tu
 from utils.admin_utils import admin_required
 from source.working_classes import Event
+import asyncio
 from database.requests.requests import add_event_if_not_exists
 
 admin_router = Router()
@@ -40,8 +42,7 @@ async def add_event_2(message: Message, state: FSMContext):
         await state.update_data(title=answer)
         await state.set_state(AddEvent.description)
         await message.answer(text='Введите описание события!')
-    else:
-        await message.answer(text='Введенный заголовок не валиден')
+    await message.answer(text='Введенный заголовок не валиден')
 
 
 @admin_router.message(AddEvent.description)
@@ -82,7 +83,7 @@ async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
     try:
         counter = int(answer)
-        await state.update_data(vacant_places=counter)
+        await state.update_data(vacant_places=answer)
         await state.set_state(AddEvent.address)
         await message.answer(text='Давай укажем адреc, '
                                   'по которому будет проводиться Ивент')
@@ -108,8 +109,39 @@ async def add_event_end(message: Message, state: FSMContext):
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
 
+class Broadcast(StatesGroup):
+    message = State()
+
+@admin_router.message(F.text == "Сделать рассылку")
+@admin_required
+async def start_broadcast(message: Message, state: FSMContext):
+    await state.set_state(Broadcast.message)
+    await message.answer(text='Введите текст сообщения для рассылки:')
 
 
+@admin_router.message(Broadcast.message)
+@admin_required
+async def send_broadcast(message: Message, state: FSMContext):
+    broadcast_message = message.text
+    if len(broadcast_message) > 0:
+        await send_message_to_everybody(message.bot, broadcast_message)
+        await state.clear()
+    else:
+        await message.answer(text='Сообщение не может быть пустым. Попробуйте еще раз.')
+
+
+async def send_message_to_everybody(bot: Bot, broadcast_message: str):
+    users = await rq.get_all_tg_ids()
+    success_count = 0
+    fail_count = 0
+
+    for user_id in users:
+        try:
+            await bot.send_message(chat_id=user_id, text=broadcast_message)
+            success_count += 1
+            await asyncio.sleep(0.05)
+        except Exception as e:
+            fail_count += 1
 
 
 
