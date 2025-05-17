@@ -15,7 +15,7 @@ ADMIN_CHAT_ID = -1002649837821
 # ADMIN_CHAT_ID = dotenv_values('env').get('ADMIN_CHAT_ID')
 
 
-router = Router()
+user_router = Router()
 
 
 class Reg(StatesGroup):
@@ -37,7 +37,7 @@ async def set_commands(bot):
     await bot.set_my_commands(commands)
 
 
-@router.message(CommandStart())
+@user_router.message(CommandStart())
 async def cmd_start(message: Message):
     is_admin = await rq.is_admin(message.from_user.id)
     if is_admin:
@@ -48,11 +48,11 @@ async def cmd_start(message: Message):
                              reply_markup=kb.main_reply)
 
 
-@router.message(Command("help"))
+@user_router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
 
-@router.message(F.text == "О нас ℹ️")
+@user_router.message(F.text == "О нас ℹ️")
 async def get_info(message: Message):
     await message.answer(
         'Я Бот - организатор мероприятий компании Naumen 😊\n\n'
@@ -62,14 +62,14 @@ async def get_info(message: Message):
 
 
 # Запрос вопроса
-@router.message(F.text == "Задать вопрос")
+@user_router.message(F.text == "Задать вопрос")
 async def ask_question(message: Message, state: FSMContext):
     await state.set_state(Ask.waiting_for_question)
     await message.answer("Напишите свой вопрос:", reply_markup=ReplyKeyboardRemove())
 
 
 # Получение и пересылка вопроса админу
-@router.message(Ask.waiting_for_question)
+@user_router.message(Ask.waiting_for_question)
 async def got_question(message: Message, state: FSMContext, bot):
     user_id = message.from_user.id
     username = message.from_user.username or "Без username"
@@ -85,7 +85,7 @@ async def got_question(message: Message, state: FSMContext, bot):
     await state.clear()
 
 
-@router.message(F.chat.id == ADMIN_CHAT_ID)
+@user_router.message(F.chat.id == ADMIN_CHAT_ID)
 async def reply_to_user(message: Message, bot):
     if message.reply_to_message:
         # Ищем user_id в оригинальном сообщении
@@ -113,7 +113,7 @@ async def reply_to_user(message: Message, bot):
 #     await callback.answer('')
 #     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
 
-@router.message(F.text == "⬅️ Назад")
+@user_router.message(F.text == "⬅️ Назад")
 async def go_back(message: Message, state: FSMContext):
     current_state = await state.get_state()
 
@@ -130,14 +130,14 @@ async def go_back(message: Message, state: FSMContext):
         await state.clear()
 
 
-@router.message(F.text == "Зарегистрироваться ✔")
+@user_router.message(F.text == "Зарегистрироваться ✔")
 async def start_registration(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
     await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
                          reply_markup=kb.back_reply)
 
 
-@router.message(F.text == "Мой профиль")
+@user_router.message(F.text == "Мой профиль")
 async def start_registration(message: Message):
     await message.answer("Это твой профиль."
                          "\nТут ты можешь узнать, на какие мероприятия ты записался, какой ты в очереди, получить QR-код на мероприятие"
@@ -149,14 +149,14 @@ async def start_registration(message: Message):
     # Данные
 
 
-@router.message(Command('reg'))
+@user_router.message(Command('reg'))
 async def reg_one(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
     await message.answer('Введите имя (только буквы, от 2 до 30 символов)',
                          reply_markup=kb.back_reply)
 
 
-@router.message(Reg.first_name)
+@user_router.message(Reg.first_name)
 async def reg_two(message: Message, state: FSMContext):
     if message.text == "⬅️ Назад":
         return await go_back(message, state)
@@ -171,7 +171,7 @@ async def reg_two(message: Message, state: FSMContext):
                          ,reply_markup=kb.back_reply)
 
 
-@router.message(Reg.second_name)
+@user_router.message(Reg.second_name)
 async def reg_three(message: Message, state: FSMContext):
     if message.text == "⬅️ Назад":
         return await go_back(message, state)
@@ -187,7 +187,7 @@ async def reg_three(message: Message, state: FSMContext):
                          ,reply_markup=kb.back_reply)
 
 
-@router.message(Reg.number)
+@user_router.message(Reg.number)
 async def reg_four(message: Message, state: FSMContext):
     if message.text == "⬅️ Назад":
         return await go_back(message, state)
@@ -220,7 +220,7 @@ async def reg_four(message: Message, state: FSMContext):
     await state.clear()
 
 
-@router.message(F.text == "Актуальные события 🗓")
+@user_router.message(F.text == "Актуальные события 🗓")
 async def get_all_events(message: Message):
     events = await rq.show_all_events()
     for event in events:
