@@ -10,6 +10,7 @@ main = InlineKeyboardMarkup(inline_keyboard=[
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Зарегистрироваться")],
+        [KeyboardButton(text="Задать вопрос")]
     ],
     resize_keyboard=True
 )
