@@ -127,6 +127,18 @@ async def start_registration(message: Message, state: FSMContext):
                          reply_markup=kb.back_reply)
 
 
+@router.message(F.text == "Мой профиль")
+async def start_registration(message: Message):
+    await message.answer("Это твой профиль."
+                         "\nТут ты можешь узнать, на какие мероприятия ты записался, какой ты в очереди, получить QR-код на мероприятие"
+                         "\nТак же ты можешь проверить и исправить свои данные,",
+                         reply_markup=kb.profile_reply)
+    # TO DO
+    # Список активностей в которых зареган
+    # Список очередей в которых находится
+    # Данные
+
+
 @router.message(Command('reg'))
 async def reg_one(message: Message, state: FSMContext):
     await state.set_state(Reg.first_name)
