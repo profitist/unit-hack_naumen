@@ -67,9 +67,8 @@ async def add_event_4(message: Message, state: FSMContext):
         date = datetime.strptime(answer, '%d.%m.%Y %H:%M:%S')
         await state.update_data(date=date)
         await state.set_state(AddEvent.vacant_places)
-
-        await message.answer(text=f'Ура! {await state.get_value('title')} '
-                                  f'будет проведен {await state.get_value('date')}\n\n'
+        await message.answer(text=f'Ура! {state.get_value("title")} '
+                                  f'будет проведен {state.get_value("date")}\n\n'
                                   f'Давай укажем максимальное число участников')
     else:
         await message.answer('Введенная дата не корректна!\n'
