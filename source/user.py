@@ -24,7 +24,7 @@ class UserClass:
             "user": {
                 "user_id": self.user_id,
                 "name": self.username,
-                "email": self.phone_number
+                "phone": self.phone_number
             },
             "event": {
                 "event_id": event.id,
