@@ -83,6 +83,13 @@ async def user_id_by_tg_id(tg_id):
 # TO DO
 
 
+async def get_all_tg_ids() -> list[int]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User.tg_id))
+        tg_ids = result.scalars().all()
+        return tg_ids
+
+
 async def show_all_events_of_user(user_instance: UserClass):
     async with AsyncSessionLocal() as session:
         current_datetime = datetime.now()
@@ -101,4 +108,3 @@ async def show_all_events_of_user(user_instance: UserClass):
         )
 
         return result.scalars().all()
-

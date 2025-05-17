@@ -1,19 +1,18 @@
 from datetime import datetime
 
-from aiogram.filters import CommandStart, Command
-from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
-from main import Bot
+from aiogram.types import Message, InlineKeyboardMarkup
+from aiogram import Bot
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import app.validators as val
-import database.requests.requests as rq
-import app.keyboards as kb
-import utils.text_utils as tu
 from utils.admin_utils import admin_required
 from source.working_classes import Event
 import asyncio
 from database.requests.requests import add_event_if_not_exists
+import app.keyboards.admin_keyboards as ak
+import database.requests.requests as rq
+import utils.text_utils as tu
 
 admin_router = Router()
 
@@ -24,6 +23,11 @@ class AddEvent(StatesGroup):
     date = State()
     vacant_places = State()
     address = State()
+    send = State()
+
+
+class Broadcast(StatesGroup):
+    message = State()
 
 
 @admin_router.message(F.text == 'Добавить новое событие')
@@ -42,7 +46,8 @@ async def add_event_2(message: Message, state: FSMContext):
         await state.update_data(title=answer)
         await state.set_state(AddEvent.description)
         await message.answer(text='Введите описание события!')
-    await message.answer(text='Введенный заголовок не валиден')
+    else:
+        await message.answer(text='Введенный заголовок не валиден')
 
 
 @admin_router.message(AddEvent.description)
@@ -68,8 +73,8 @@ async def add_event_4(message: Message, state: FSMContext):
         date = datetime.strptime(answer, '%d.%m.%Y %H:%M:%S')
         await state.update_data(date=date)
         await state.set_state(AddEvent.vacant_places)
-        await message.answer(text=f'Ура! {state.get_value("title")} '
-                                  f'будет проведен {state.get_value("date")}\n\n'
+        await message.answer(text=f'Ура! {await state.get_value("title")} '
+                                  f'будет проведен {await state.get_value("date")}\n\n'
                                   f'Давай укажем максимальное число участников')
     else:
         await message.answer('Введенная дата не корректна!\n'
@@ -83,7 +88,7 @@ async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
     try:
         counter = int(answer)
-        await state.update_data(vacant_places=answer)
+        await state.update_data(vacant_places=counter)
         await state.set_state(AddEvent.address)
         await message.answer(text='Давай укажем адреc, '
                                   'по которому будет проводиться Ивент')
@@ -104,13 +109,24 @@ async def add_event_end(message: Message, state: FSMContext):
                       _vacant_places=data['vacant_places'],
                       _location=data['address'])
         await add_event_if_not_exists(event)
-        await message.answer("Событие добавлено")
-        await state.clear()
+        await message.answer("Событие добавлено",
+                             reply_markup=ak.send_everyone_event_creation)
+        await state.set_state(AddEvent.send)
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
 
-class Broadcast(StatesGroup):
-    message = State()
+
+@admin_router.message(
+    F.text == 'Уведомить всех о новом событии',
+    AddEvent.send  # Проверяем состояние
+)
+@admin_router.message(AddEvent.send)
+async def send_everybody_event_info(message: Message, state: FSMContext):
+    data = await state.get_data()
+    text = tu.send_notification_of_creating_event(data)
+    await send_message_to_everybody(message.bot, text)
+    await state.clear()
+
 
 @admin_router.message(F.text == "Сделать рассылку")
 @admin_required
@@ -137,16 +153,10 @@ async def send_message_to_everybody(bot: Bot, broadcast_message: str):
 
     for user_id in users:
         try:
+            print(user_id)
             await bot.send_message(chat_id=user_id, text=broadcast_message)
             success_count += 1
             await asyncio.sleep(0.05)
         except Exception as e:
             fail_count += 1
-
-
-
-
-
-
-
 

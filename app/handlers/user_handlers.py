@@ -1,12 +1,15 @@
 from aiogram.dispatcher import router
 from aiogram.filters import CommandStart, Command, CommandObject
-from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
+from aiogram.types import (Message,
+                           CallbackQuery,
+                           BotCommand,
+                           ReplyKeyboardRemove)
 from aiogram import F, Router
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import app.validators as val
 import database.requests.requests as rq
-import app.keyboards as kb
+import app.keyboards.keyboards as kb
 import utils.text_utils as tu
 from source.user import UserClass
 from database.requests.requests import add_user_if_not_exists
@@ -58,7 +61,7 @@ async def get_start(message: Message):
     is_admin = await rq.is_admin(message.from_user.id)
     if is_admin:
         await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=kb.admin)
+                             reply_markup=kb.admin_menu)
     else:
         await message.answer(tu.send_start_common_user_message(message),
                              reply_markup=kb.main_reply)

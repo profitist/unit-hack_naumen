@@ -17,3 +17,12 @@ def send_start_admin_user_message(message: Message):
             )
     return text
 
+
+def send_notification_of_creating_event(data: dict):
+    return (f'Новое событие 🔥🔥🔥\n\n'
+            f'**{data["title"]}**\n\n'
+            f'{data["description"]}\n\n'
+            f'Когда: {data["date"]}\n'
+            f'Места ограничены: {data["vacant_places"]}\n')
+
+
