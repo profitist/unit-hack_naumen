@@ -10,7 +10,8 @@ router = Router()
 
 
 class Reg(StatesGroup):
-    name = State()
+    first_name = State()
+    second_name = State()
     number = State()
 
 async def set_commands(bot):
@@ -41,26 +42,35 @@ async def get_help(message: Message):
 
 @router.message(F.text == "Зарегистрироваться")
 async def start_registration(message: Message, state: FSMContext):
-    await state.set_state(Reg.name)
+    await state.set_state(Reg.first_name)
     await message.answer("Введите имя", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message(Command('reg'))
 async def reg_one(message: Message, state: FSMContext):
-    await state.set_state(Reg.name)
+    await state.set_state(Reg.first_name)
     await message.answer('Введите имя', reply_markup=ReplyKeyboardRemove())
 
 
-@router.message(Reg.name)
+@router.message(Reg.first_name)
 async def reg_two(message: Message, state: FSMContext):
-    await state.update_data(name=message.text)
-    await state.set_state(Reg.number)
-    await message.answer('Введите номер телефона в формате +71234567890')
+    # проверить имя
+    await state.update_data(first_name=message.text)
+    await state.set_state(Reg.second_name)
+    await message.answer('Введите фамилию')
 
+
+@router.message(Reg.second_name)
+async def reg_three(message: Message, state: FSMContext):
+    # проверить фамилию
+    await state.update_data(second_name=message.text)
+    await state.set_state(Reg.number)
+    await message.answer('Введите номер телефона')
 
 @router.message(Reg.number)
-async def two_three(message: Message, state: FSMContext):
+async def reg_four(message: Message, state: FSMContext):
+    # проверить номер
     await state.update_data(number=message.text)
     data = await state.get_data()
-    await message.answer(f'Спасибо, родной.\nИмя: {data["name"]}\nНомер: {data["number"]}', reply_markup=kb.reply_test)
+    await message.answer(f'Спасибо, родной.\nИмя: {data["first_name"]}\nФамилия: {data["second_name"]}\nНомер: {data["number"]}', reply_markup=kb.reply_test)
     await state.clear()
