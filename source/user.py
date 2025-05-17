@@ -1,9 +1,9 @@
-class User:
+class UserClass:
     def __init__(self):
-        self.user_id = ''
-        self.tg_id = ''
-        self.username = ''
-        self.first_name = ''
-        self.last_name = ''
-        self.phone_number = ''
+        self.user_id = int
+        self.tg_id = int
+        self.username = str
+        self.first_name = str
+        self.last_name = str
+        self.phone_number = str
         self.is_admin = False
