@@ -235,7 +235,7 @@ async def get_all_events(message: Message):
         await message.answer(
             f'{event.description}\n'
             f'{event.datetime}'
-            " <a href='https://t.me/naume_pivo_n_bot?start'>Подробнее</a>",
+            " <a href='https://t.me/naume_pivo_n_bot?start=test'>Подробнее</a>",
             parse_mode="HTML"
         )
 
