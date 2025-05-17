@@ -34,41 +34,57 @@ async def add_event_1(message: Message, state: FSMContext):
 @admin_required
 async def add_event_2(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(title=answer)
-    await state.set_state(AddEvent.description)
-    await message.answer(text='Введите описание события!')
+    if val.is_valid_event_name(answer):
+        await state.update_data(title=answer)
+        await state.set_state(AddEvent.description)
+        await message.answer(text='Введите описание события!')
+    await message.answer(text='Введенный заголовок не валиден')
 
 
 @admin_router.message(AddEvent.description)
 @admin_required
 async def add_event_3(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(description=answer)
-    await state.set_state(AddEvent.date)
-    await message.answer(text='Отлично, описание добавлено\n!'
-                              'Давайте назначим дату: Введите ее в формате '
-                              '{дд.мм.гггг}')
+    if len(answer) >= 10:
+        await state.update_data(description=answer)
+        await state.set_state(AddEvent.date)
+        await message.answer(text='Отлично, описание добавлено!\n'
+                                  'Давайте назначим дату: Введите ее в формате '
+                                  '{дд.мм.гггг}')
+    else:
+        await message.answer(text='Описание слишком короткое, '
+                                  'давай дадим больше информации')
 
 
 @admin_router.message(AddEvent.date)
 @admin_required
 async def add_event_4(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(date=answer)
-    await state.set_state(AddEvent.vacant_places)
-    await message.answer(text=f'Ура! {state.get_value('title')} '
-                              f'будет проведен {state.get_value('date')}\n\n'
-                              f'Давай укажем максимальное число участников')
+    if val.is_valid_event_date(answer):
+        await state.update_data(date=answer)
+        await state.set_state(AddEvent.vacant_places)
+        await message.answer(text=f'Ура! {state.get_value('title')} '
+                                  f'будет проведен {state.get_value('date')}\n\n'
+                                  f'Давай укажем максимальное число участников')
+    else:
+        await message.answer('Введенная дата не корректна!\n'
+                             'Попробуй ввести еще раз\n\n'
+                             'Вот формат: {дд.мм.гг чч:мин}')
 
 
 @admin_router.message(AddEvent.vacant_places)
 @admin_required
 async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
-    await state.update_data(vacant_places=answer)
-    await state.set_state(AddEvent.address)
-    await message.answer(text='Давай укажем адреc, '
-                              'по которому будет проводиться Ивент')
+    try:
+        counter = int(answer)
+        await state.update_data(vacant_places=answer)
+        await state.set_state(AddEvent.address)
+        await message.answer(text='Давай укажем адреc, '
+                                  'по которому будет проводиться Ивент')
+    except ValueError:
+        await message.answer(text='Некорректный ввод!\n '
+                                  'Проверь, что вводишь число!')
 
 
 @admin_router.message(AddEvent.address)
@@ -83,6 +99,15 @@ async def add_event_end(message: Message, state: FSMContext):
     await add_event_if_not_exists(event)
     await message.answer("Событие добавлено")
     await state.clear()
+    if val.is_valid_location(address):
+        data = state.get_data()
+        event = Event(_title=data['title'], _description=data['description'],
+                      _start_time=data['date'], _vacant_places=data['vacant_places'],
+                      _location=data['address'])
+
+        await state.clear()
+    else:
+        await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
 
 
 
