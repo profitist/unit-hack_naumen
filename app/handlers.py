@@ -50,6 +50,7 @@ async def reg_one(message: Message, state: FSMContext):
     await state.set_state(Reg.name)
     await message.answer('Введите имя', reply_markup=ReplyKeyboardRemove())
 
+
 @router.message(Reg.name)
 async def reg_two(message: Message, state: FSMContext):
     await state.update_data(name=message.text)
