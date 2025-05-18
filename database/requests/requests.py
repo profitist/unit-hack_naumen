@@ -19,6 +19,7 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
 
             if existing_user is None:
                 new_user = User(
+                    user_id=user_instance.tg_id,
                     tg_id=user_instance.tg_id,
                     username=user_instance.username,
                     first_name=user_instance.first_name,
@@ -42,6 +43,17 @@ async def is_registered(user_id: int) -> bool:
             if existing_user is None:
                 return False
             return True
+
+
+async def get_all_master_classes(event_id: int) -> list[MasterClass]:
+    async with AsyncSessionLocal() as session:  # Добавлены скобки ()
+        result = await session.execute(
+            select(MasterClass)
+            .where(MasterClass.event_id == event_id)
+            .order_by(MasterClass.datetime.asc())  # Сортировка по дате
+        )
+        return result.scalars().all()  # Используем scalars().all() для списка
+
 
 
 async def add_user_on_event(user_id: int, event_id: int) -> bool:

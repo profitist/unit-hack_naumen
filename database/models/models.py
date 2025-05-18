@@ -10,8 +10,7 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "users"
-    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
-                                         autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     username: Mapped[str | None] = mapped_column(String(50))
     first_name: Mapped[str | None] = mapped_column(String(100))
