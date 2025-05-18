@@ -37,6 +37,14 @@ reg_back_inline = InlineKeyboardMarkup(
     ]
 )
 
+accept_reg = InlineKeyboardMarkup(
+    inline_keyboard=[
+
+        [InlineKeyboardButton(text="Отказаться", callback_data="disagree"),
+         InlineKeyboardButton(text="Согласиться", callback_data="agree")]
+    ]
+)
+
 
 reply_test = ReplyKeyboardMarkup(
     keyboard=[

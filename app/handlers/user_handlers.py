@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram.dispatcher import router
 from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.types import (Message,
@@ -30,6 +32,7 @@ class Reg(StatesGroup):
     first_name = State()
     second_name = State()
     number = State()
+    data_processing = State()
 
 
 class Ask(StatesGroup):
@@ -224,13 +227,30 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
         await state.clear()
 
-
 @user_router.message(F.text == "Зарегистрироваться ✔")
 async def start_registration(message: Message, state: FSMContext):
-    await state.set_state(Reg.first_name)
-    await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
-                         reply_markup=kb.reg_back_inline)
+    await message.answer("Согласны ли вы на обработку персональных данных?",
+                         reply_markup=kb.accept_reg)
 
+
+@user_router.callback_query(F.data == "agree")
+async def process_agreement(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(
+        data_processing_agreed=True,
+        agreement_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    await state.set_state(Reg.first_name)
+    await callback.message.answer("✅ Спасибо за согласие!\n\n"
+                                "Введите имя (только буквы, от 2 до 30 символов)",
+                                reply_markup=kb.reg_back_inline)
+
+@user_router.callback_query(F.data == "disagree")
+async def process_disagreement(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
+        "❌ Для использования бота необходимо согласие на обработку персональных данных.\n"
+        "Если передумаете, нажмите /reg",
+        reply_markup=kb.main_reply
+    )
 
 @user_router.message(F.text == "Мой профиль")
 async def start_registration(message: Message):
