@@ -12,6 +12,7 @@ from database.models.models import MasterClass
 from database.session import AsyncSessionLocal
 from utils.admin_utils import admin_required
 from source.working_classes import Event, Activity
+from source.read_qr_code import read_qr_code
 import asyncio
 from database.requests.requests import add_event_if_not_exists
 import app.keyboards.admin_keyboards as ak
@@ -20,6 +21,7 @@ import utils.text_utils as tu
 import aiofiles
 import uuid
 import os
+import ast
 
 admin_router = Router()
 scheduler = AsyncIOScheduler()
@@ -34,6 +36,9 @@ class AddEvent(StatesGroup):
     photo = State()
     send = State()
 
+class AddQr(StatesGroup):
+    start = State()
+    photo = State()
 
 class AddMasterClass(StatesGroup):
     event_id = State()
@@ -389,3 +394,32 @@ async def deny_add_faq_callback_query(
     await callback.message.answer('Создание вопроса отменено ❌',
                                   reply_markup=ak.admin_menu)
     await state.clear()
+
+
+@admin_router.message(F.text == 'Проверить QR-код')
+@admin_required
+async def check_qr(message: Message, state: FSMContext):
+    await state.set_state(AddQr.photo)
+    await message.answer(text="Сфотографируй QR-код и отправь мне")
+
+
+@admin_router.message(AddQr.photo)
+@admin_required
+async def check_qr(message: Message, state: FSMContext):
+    photo = message.photo[-1]
+    file = await message.bot.get_file(photo.file_id)
+    file_stream = BytesIO()
+    await message.bot.download_file(file.file_path, destination=file_stream)
+    file_stream.seek(0)
+    photo_bytes = file_stream.read()
+    qr_json = await read_qr_code(photo_bytes)
+    # data_dict = ast.literal_eval(qr_json)
+    # print('pisa' + qr_json['user']['tg_id'])
+    tg_id = qr_json['user']['tg_id']
+    event_id = qr_json['event']['event_id']
+    user = await rq.find_user(int(tg_id))
+    event = await rq.find_event(int(event_id))
+    # if user is None or event is None:
+    #     await message.answer(text="Некорректный QR-cod")
+    await message.answer(text=f'{user.username} {user.last_name} зарегистрирован на мероприятие')
+

@@ -436,6 +436,16 @@ async def find_event(event_id: int):
         return event
 
 
+async def find_user(tg_id: int):
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User)
+            .where(User.tg_id == tg_id)
+        )
+        event = result.scalar_one_or_none()
+        return event
+
+
 async def is_admin(user_id: int) -> bool:
     print(user_id)
     async with AsyncSessionLocal() as session:
