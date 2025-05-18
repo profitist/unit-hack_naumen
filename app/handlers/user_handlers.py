@@ -16,7 +16,7 @@ import source.read_qr_code as qr
 from source.user import UserClass
 from database.requests.requests import add_user_if_not_exists
 from aiogram.types import BufferedInputFile
-from utils.admin_utils import reg_required
+from utils.admin_utils import reg_required, reg_required_callback
 
 ADMIN_CHAT_ID = -1002649837821
 # ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
@@ -86,7 +86,8 @@ async def cmd_start(message: Message, command: CommandObject):
 
 
 @user_router.callback_query(F.data.startswith('reg_on_event_'))
-async def go_back(callback: CallbackQuery, state: FSMContext):
+@reg_required_callback
+async def nahui_magazin(callback: CallbackQuery, state: FSMContext):
     event_id = int(callback.data.removeprefix('reg_on_event_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)

@@ -1,6 +1,7 @@
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 import database.requests.requests as rq
 import app.keyboards.admin_keyboards as ak
+from functools import wraps
 
 
 def admin_required(func):
@@ -28,4 +29,25 @@ def reg_required(func):
                                  'пройдите региистрацию!', ak.admin_menu)
             return
         return await func(message, *args, **kwargs)
+    return wrapper
+
+
+def reg_required_callback(func):
+    @wraps(func)
+    async def wrapper(callback: CallbackQuery, **data):
+        from_user = callback.from_user
+        user_id = from_user.id
+
+        # Проверка регистрации
+        founded_user = await rq.is_registered(user_id)
+        if founded_user is None:
+            await callback.message.answer(
+                'Вы не зарегистрированы в системе, пожалуйста пройдите регистрацию!',
+                reply_markup=ak.admin_menu
+            )
+            return
+
+        # Передаём всё, как есть, включая callback, FSM-состояние и всё остальное
+        return await func(callback, **data)
+
     return wrapper
