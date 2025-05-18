@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+from aiogram.types import BufferedInputFile
 from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
 from aiogram import Bot, F, Router
 from aiogram.types import ReplyKeyboardRemove
@@ -33,6 +33,7 @@ class AddEvent(StatesGroup):
     address = State()
     photo = State()
     send = State()
+
 
 class AddMasterClass(StatesGroup):
     event_id = State()
@@ -107,12 +108,35 @@ async def add_event_5(message: Message, state: FSMContext):
         if counter <= 0:
             raise ValueError
         await state.update_data(vacant_places=counter)
-        await state.set_state(AddEvent.address)
-        await message.answer(text='Давай укажем адреc, '
-                                  'по которому будет проводиться Ивент')
+        await state.set_state(AddEvent.photo)
+        await message.answer(text='Давай пришлем фотку '
+                                  'иконки для нового мероприятия. '
+                                  'Просто отправь сюда фотку')
     except ValueError:
         await message.answer(text='Некорректный ввод!\n '
                                   'Проверь, что вводишь число!')
+
+
+@admin_router.message(AddEvent.photo)
+@admin_required
+async def add_event_photo(message: Message, state: FSMContext):
+    if message.photo is None:
+        await message.answer('Давай укажем адрес, '
+                             'по которому будет проходить событие 😊')
+        await state.set_state(AddEvent.address)
+        return
+    photo = message.photo[-1]
+    file = await message.bot.get_file(photo.file_id)
+
+    file_stream = BytesIO()
+    await message.bot.download_file(file.file_path, destination=file_stream)
+    file_stream.seek(0)
+
+    photo_bytes = file_stream.read()
+    await state.set_state(AddEvent.address)
+    await state.update_data(photo=photo_bytes)
+    await message.answer(text='Отлично, фотка добавлена, давай введем адрес, '
+                              'по которому будет проходить событие 😊')
 
 
 @admin_router.message(AddEvent.address)
@@ -126,7 +150,7 @@ async def add_event_end(message: Message, state: FSMContext):
                       _start_time=data['date'],
                       _vacant_places=data['vacant_places'],
                       _location=data['address'])
-        await add_event_if_not_exists(event)
+        await add_event_if_not_exists(event, photo=data.get('photo'))
         await message.answer("Событие добавлено. Всех зарегистрировавшихся уведомят за час!",
                              reply_markup=ak.send_everyone_event_creation)
         broadcast_time = event._start_time - timedelta(hours=1)
@@ -139,6 +163,7 @@ async def add_event_end(message: Message, state: FSMContext):
         await state.set_state(AddEvent.send)
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
+
 
 async def send_event_broadcast(event: Event, bot: Bot):
     message_text = (
@@ -168,7 +193,13 @@ async def send_event_broadcast(event: Event, bot: Bot):
 async def send_everybody_event_info(message: Message, state: FSMContext):
     data = await state.get_data()
     text = tu.send_notification_of_creating_event(data)
-    await send_message_to_everybody(message.bot, text)
+    photo = data.get('photo', None)
+    if photo is not None:
+        icon_photo = BufferedInputFile(photo, filename="event.jpg")
+        await send_message_to_everybody(message, message.bot, icon_photo,
+                                        broadcast_message=text)
+    else:
+        await send_message_to_everybody(message, message.bot, text)
     await state.clear()
 
 
@@ -184,14 +215,15 @@ async def start_broadcast(message: Message, state: FSMContext):
 async def send_broadcast(message: Message, state: FSMContext):
     broadcast_message = message.text
     if len(broadcast_message) > 0:
-        await send_message_to_everybody(message, message.bot, broadcast_message)
+        await send_message_to_everybody(message, message.bot,
+                                        broadcast_message=broadcast_message)
         await state.clear()
     else:
         await message.answer(text='Сообщение не может быть пустым. Попробуйте еще раз.')
 
 
 async def send_message_to_everybody(
-        message: Message, bot: Bot, broadcast_message: str):
+        message: Message, bot: Bot, photo=None, broadcast_message: str = None):
     users = await rq.get_all_tg_ids()
     success_count = 0
     fail_count = 0
@@ -199,8 +231,11 @@ async def send_message_to_everybody(
                          reply_markup=ReplyKeyboardRemove())
     for user_id in users:
         try:
-            print(user_id)
-            await bot.send_message(chat_id=user_id, text=broadcast_message)
+            if photo is None:
+                await bot.send_message(chat_id=user_id, text=broadcast_message)
+            else:
+                await bot.send_photo(chat_id=user_id, photo=photo,
+                                     caption=broadcast_message)
             success_count += 1
             await asyncio.sleep(0.05)
         except Exception as e:
@@ -301,6 +336,7 @@ async def add_master_class_places(message: Message, state: FSMContext):
 
     except ValueError:
         await message.answer("Введите корректное число мест (больше 0)")
+
 
 class FaqAdd(StatesGroup):
     message = State()
