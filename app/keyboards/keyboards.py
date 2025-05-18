@@ -15,7 +15,8 @@ admin = ReplyKeyboardMarkup(
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Зарегистрироваться ✔"), KeyboardButton(text="Актуальные события 🗓")],
-        [KeyboardButton(text="Мой профиль"), KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")],
+        [KeyboardButton(text="Мой профиль"), KeyboardButton(text="Мои очереди")],
+        [KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")],
         [KeyboardButton(text='FAQ 🧐')]
     ],
     resize_keyboard=True
@@ -33,6 +34,14 @@ profile_reply = ReplyKeyboardMarkup(
 reg_back_inline = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_in_reg")]
+    ]
+)
+
+accept_reg = InlineKeyboardMarkup(
+    inline_keyboard=[
+
+        [InlineKeyboardButton(text="Отказаться", callback_data="disagree"),
+         InlineKeyboardButton(text="Согласиться", callback_data="agree")]
     ]
 )
 

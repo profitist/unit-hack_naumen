@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from aiogram.dispatcher import router
 from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram.types import (Message,
@@ -30,6 +32,7 @@ class Reg(StatesGroup):
     first_name = State()
     second_name = State()
     number = State()
+    data_processing = State()
 
 
 class Ask(StatesGroup):
@@ -59,17 +62,19 @@ async def cmd_start(message: Message, command: CommandObject):
         if command.args == 'test':
             await message.answer("Вот тебе помощь!")
         event = await rq.find_event(int(command.args))
+        tg_id = message.from_user.id
+        user_id = await rq.user_id_by_tg_id(tg_id)
         if event.icon_photo is None:
             await message.answer(text=f'{event.title}\n'
                                       f'{event.description}\n'
                                       f'{event.datetime}\n',
                                  reply_markup=
-                                 await kb.inline_event_description(event.id)
+                                 await kb.inline_event_description(user_id, event.id)
         )
         else:
             photo = BufferedInputFile(event.icon_photo, filename="event.jpg")
             await message.answer_photo(
-                photo=photo,
+                photo=photo
             )
 
             tg_id = message.from_user.id
@@ -84,13 +89,20 @@ async def cmd_start(message: Message, command: CommandObject):
 
 
 @user_router.callback_query(F.data.startswith('reg_on_event_'))
-async def go_back(callback: CallbackQuery, state: FSMContext):
+async def reg_on_event(callback: CallbackQuery, state: FSMContext):
     event_id = int(callback.data.removeprefix('reg_on_event_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
+    if user_id is None:
+        await callback.message.answer('Вы не зарегестрированы в системе, пожалуйста'
+                             'пройдите региистрацию!', ak.admin_menu)
+        return
     qr_code = await qr.generate_qr_code(tg_id, user_id)
+    qr_code_photo = BufferedInputFile(qr_code, filename="event.jpg")
     add_succses = await rq.add_user_on_event(user_id, event_id, qr_code)
     if add_succses:
+        await callback.message.answer(text='Вот твой QR-cod. Он понадобится тебе, чтобы пройти на мероприятие')
+        await callback.message.answer_photo(photo=qr_code_photo)
         await callback.message.answer(f'Вы зарегистрированы на событие',
                               reply_markup=kb.main_reply)
 
@@ -102,7 +114,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data.startswith('master_classes_of_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
-    event_id = int(callback.data.removeprefix('activity_of_event_'))
+    event_id = int(callback.data.removeprefix('master_classes_of_'))
     masterclasses = await rq.get_all_master_classes(event_id)
     event_id = int(callback.data.removeprefix('master_classes_of_'))
     tg_id = callback.from_user.id
@@ -219,13 +231,30 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer("Вы вышли из регистрации", reply_markup=kb.main_reply)
         await state.clear()
 
-
 @user_router.message(F.text == "Зарегистрироваться ✔")
 async def start_registration(message: Message, state: FSMContext):
-    await state.set_state(Reg.first_name)
-    await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
-                         reply_markup=kb.reg_back_inline)
+    await message.answer("Согласны ли вы на обработку персональных данных?",
+                         reply_markup=kb.accept_reg)
 
+
+@user_router.callback_query(F.data == "agree")
+async def process_agreement(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(
+        data_processing_agreed=True,
+        agreement_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    await state.set_state(Reg.first_name)
+    await callback.message.answer("✅ Спасибо за согласие!\n\n"
+                                "Введите имя (только буквы, от 2 до 30 символов)",
+                                reply_markup=kb.reg_back_inline)
+
+@user_router.callback_query(F.data == "disagree")
+async def process_disagreement(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer(
+        "❌ Для использования бота необходимо согласие на обработку персональных данных.\n"
+        "Если передумаете, нажмите /reg",
+        reply_markup=kb.main_reply
+    )
 
 @user_router.message(F.text == "Мой профиль")
 async def start_registration(message: Message):
@@ -310,6 +339,35 @@ async def reg_four(message: Message, state: FSMContext):
     await state.clear()
 
 
+@user_router.message(F.text == "Мои очереди")
+async def show_waiting_lists(message: Message):
+    user_id = await rq.user_id_by_tg_id(message.from_user.id)
+
+    # Получаем очереди на мероприятия
+    event_waiting = await rq.get_user_waiting_events(user_id)
+    # Получаем очереди на мастер-классы
+    masterclass_waiting = await rq.get_user_waiting_masterclasses(user_id)
+
+    if not event_waiting and not masterclass_waiting:
+        await message.answer("Вы не находитесь ни в одной очереди ожидания.")
+        return
+
+    response = "📝 Ваши текущие очереди:\n\n"
+
+    if event_waiting:
+        response += "🎭 Мероприятия:\n"
+        for event, position in event_waiting:
+            response += f"- {event.title}: ваша позиция {position}\n"
+        response += "\n"
+
+    if masterclass_waiting:
+        response += "🎨 Мастер-классы:\n"
+        for masterclass, position in masterclass_waiting:
+            response += f"- {masterclass.title}: ваша позиция {position}\n"
+
+    await message.answer(response)
+
+
 @user_router.message(F.text == "Актуальные события 🗓")
 async def get_all_events(message: Message):
     events = await rq.show_all_events()
@@ -317,7 +375,7 @@ async def get_all_events(message: Message):
         await message.answer(
             f'{event.title}\n'
             f'{event.datetime}\n'
-            f"<a href='https://t.me/@quote_maker_bot?start={event.id}'>Подробнее</a>",
+            f"<a href='https://t.me/naume_pivo_n_bot?start={event.id}'>Подробнее</a>",
             parse_mode="HTML"
         )
 

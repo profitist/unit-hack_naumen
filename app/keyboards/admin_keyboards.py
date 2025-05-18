@@ -8,6 +8,7 @@ admin_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Добавить новое событие")],
         [KeyboardButton(text="Добавить новый мастер класс")],
+        [KeyboardButton(text="Проверить QR-код")],
         [KeyboardButton(text="Актуальные события 🗓")],
         [KeyboardButton(text="Сделать рассылку"),
          KeyboardButton(text='Создать FAQ')]
