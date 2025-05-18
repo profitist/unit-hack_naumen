@@ -1,6 +1,8 @@
 from aiogram.types import Message, CallbackQuery, BotCommand, ReplyKeyboardRemove
 import database.requests.requests as rq
 import app.keyboards.admin_keyboards as ak
+from functools import wraps
+from aiogram.types import CallbackQuery
 
 
 def admin_required(func):
@@ -29,3 +31,4 @@ def reg_required(func):
             return
         return await func(message, *args, **kwargs)
     return wrapper
+

@@ -89,10 +89,14 @@ async def cmd_start(message: Message, command: CommandObject):
 
 
 @user_router.callback_query(F.data.startswith('reg_on_event_'))
-async def go_back(callback: CallbackQuery, state: FSMContext):
+async def reg_on_event(callback: CallbackQuery, state: FSMContext):
     event_id = int(callback.data.removeprefix('reg_on_event_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
+    if user_id is None:
+        await callback.message.answer('Вы не зарегестрированы в системе, пожалуйста'
+                             'пройдите региистрацию!', ak.admin_menu)
+        return
     qr_code = await qr.generate_qr_code(tg_id, user_id)
     qr_code_photo = BufferedInputFile(qr_code, filename="event.jpg")
     add_succses = await rq.add_user_on_event(user_id, event_id, qr_code)
