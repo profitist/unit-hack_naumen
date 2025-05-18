@@ -78,6 +78,32 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
         await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
 
 
+@user_router.callback_query(F.data.startswith('activity_of_event_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    event_id = int(callback.data.removeprefix('activity_of_event_'))
+    masterclasses = get_all_masterclasses(event_id)
+    for masterclass in masterclasses:
+        await callback.answer(
+            f'{masterclass.title}\n'
+            f'{masterclass.description}\n'
+            f'{masterclass.datetime}\n',
+            reply_markup=await kb.inline_masterclass_description(masterclass.id)
+        )
+
+
+@user_router.callback_query(F.data.startswith('reg_on_masterclass_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    masterclass_id = int(callback.data.removeprefix('reg_on_event_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    add_succses = await rq.add_user_on_master_class(user_id, masterclass_id)
+    if add_succses:
+        await callback.answer(f'Вы зарегистрированы на мастеркласс')
+    else:
+        await rq.add_to_masterclass_waiting_list(user_id, masterclass_id)
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+
+
 
 @user_router.message(Command("help"))
 async def get_help(message: Message):
@@ -144,7 +170,6 @@ async def reply_to_user(message: Message, bot):
 #     # тут взаимодейтвие с бд для регистрации
 #     await callback.answer('')
 #     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
-
 
 
 @user_router.callback_query(F.data == "back_in_reg")

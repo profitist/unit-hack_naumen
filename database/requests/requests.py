@@ -45,6 +45,17 @@ async def is_registered(user_id: int) -> bool:
             return True
 
 
+async def get_all_master_classes(event_id: int) -> list[MasterClass]:
+    async with AsyncSessionLocal() as session:  # Добавлены скобки ()
+        result = await session.execute(
+            select(MasterClass)
+            .where(MasterClass.event_id == event_id)
+            .order_by(MasterClass.datetime.asc())  # Сортировка по дате
+        )
+        return result.scalars().all()  # Используем scalars().all() для списка
+
+
+
 async def add_user_on_event(user_id: int, event_id: int) -> bool:
     async with AsyncSessionLocal() as session:
         async with session.begin():
@@ -416,3 +427,15 @@ async def add_faq(question: str, answer: str) -> None:
             await session.execute(
                 insert(FAQ).values(question=question, answer=answer)
             )
+
+
+async def get_registered_users_for_event(event_title: str) -> list[int]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User.tg_id)
+            .join(UserEventConnect, User.user_id == UserEventConnect.user_id)
+            .join(Event, UserEventConnect.event_id == Event.id)
+            .where(Event.title == event_title)
+        )
+        tg_ids = result.scalars().all()
+        return tg_ids
