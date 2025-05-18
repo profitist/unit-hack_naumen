@@ -55,8 +55,7 @@ async def get_all_master_classes(event_id: int) -> list[MasterClass]:
         return result.scalars().all()  # Используем scalars().all() для списка
 
 
-
-async def add_user_on_event(user_id: int, event_id: int) -> bool:
+async def add_user_on_event(user_id: int, event_id: int, qr: bytes | None) -> bool:
     async with AsyncSessionLocal() as session:
         async with session.begin():
             try:
@@ -79,7 +78,7 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                     .where(
                         and_(
                             UserEventConnect.user_id == user_id,
-                            UserEventConnect.event_id == event_id
+                            UserEventConnect.event_id == event_id,
                         )
                     )
                 )
@@ -89,7 +88,8 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                 new_reg = UserEventConnect(
                     user_id=user_id,
                     event_id=event_id,
-                    date_of_registration=datetime.now()
+                    date_of_registration=datetime.now(),
+                    qr_code=qr
                 )
                 session.add(new_reg)
                 event.vacant_places -= 1

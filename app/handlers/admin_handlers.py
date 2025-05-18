@@ -131,6 +131,7 @@ async def add_event_end(message: Message, state: FSMContext):
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
 
+
 async def send_event_broadcast(event: Event, bot: Bot):
     message_text = (
         f"Уже через час!  *{event._title}*!\n"
@@ -146,6 +147,7 @@ async def send_event_broadcast(event: Event, bot: Bot):
                 text=message_text,
                 parse_mode="Markdown"
             )
+
             await asyncio.sleep(0.05)
         except Exception as e:
             print(f"{e} for user {user_id}")
