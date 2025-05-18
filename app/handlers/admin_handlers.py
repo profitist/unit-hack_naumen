@@ -36,6 +36,7 @@ class AddMasterClass(StatesGroup):
     description = State()
     date = State()
     vacant_places = State()
+    photo = State()
 
 
 class Broadcast(StatesGroup):
