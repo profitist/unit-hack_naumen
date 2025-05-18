@@ -401,3 +401,17 @@ async def faq(message: Message):
 async def reg(message: Message, state: FSMContext):
     await message.answer('Вы попали в меню своего профиля 😉',
                          reply_markup=kb.profile_reply)
+
+@user_router.message(F.text == 'Мои мероприятия')
+async def my_masterclasses(message: Message):
+    tg_id = message.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    events = await rq.show_all_events_of_user(tg_id)
+    for event in events:
+        await message.answer(
+            f'{event.title}\n'
+            f'{event.datetime}\n'
+        )
+        qr_code = await qr.generate_qr_code(tg_id, user_id)
+        qr_code_photo = BufferedInputFile(qr_code, filename="event.jpg")
+        await message.answer_photo(photo=qr_code_photo)
