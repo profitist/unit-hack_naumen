@@ -18,14 +18,14 @@ def is_valid_phone_number(number: str) -> bool:
 
 
 def is_valid_event_date(date_str: str) -> bool:
-    pattern = r'^(?:\d{4}-\d{2}-\d{2}|\d{2}\.\d{2}\.\d{4})\s\d{2}:\d{2}:\d{2}$'
+    pattern = r'^(?:\d{4}-\d{2}-\d{2}|\d{2}\.\d{2}\.\d{4})\s\d{2}:\d{2}$'
     if not re.fullmatch(pattern, date_str):
         return False
     try:
         if '.' in date_str:
-            datetime.strptime(date_str, '%d.%m.%Y %H:%M:%S')
+            datetime.strptime(date_str, '%d.%m.%Y %H:%M')
         else:
-            datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
+            datetime.strptime(date_str, '%Y-%m-%d %H:%M')
         return True
     except ValueError:
         return False

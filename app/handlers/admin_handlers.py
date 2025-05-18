@@ -81,7 +81,7 @@ async def add_event_3(message: Message, state: FSMContext):
         await state.set_state(AddEvent.date)
         await message.answer(text='Отлично, описание добавлено!\n'
                                   'Давайте назначим дату: Введите ее в формате '
-                                  '{дд.мм.гггг}')
+                                  '{дд.мм.гггг чч:мин}')
     else:
         await message.answer(text='Описание слишком короткое, '
                                   'давай дадим больше информации')
@@ -92,7 +92,7 @@ async def add_event_3(message: Message, state: FSMContext):
 async def add_event_4(message: Message, state: FSMContext):
     answer = message.text
     if val.is_valid_event_date(answer):
-        date = datetime.strptime(answer, '%d.%m.%Y %H:%M:%S')
+        date = datetime.strptime(answer, '%d.%m.%Y %H:%M')
         await state.update_data(date=date)
         await state.set_state(AddEvent.vacant_places)
         await message.answer(text=f'Ура! {await state.get_value("title")} '

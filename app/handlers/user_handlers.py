@@ -388,8 +388,6 @@ async def faq(message: Message):
                              reply_markup=kb.main_reply)
         return
     text_message = ''
-    print(faqs[0].question)
-    print(faqs[1].question)
     for faq in faqs:
         text_message += faq.question + '\n\n'
         text_message += faq.answer + '\n\n'
