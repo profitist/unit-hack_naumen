@@ -38,24 +38,24 @@
   * Общение с администраторами
 * **FAQ**: Быстрые ответы на частые вопросы
 ## Приветствие и регистрация
-![img_5.png](img_5.png)
+![img_5.png](images/img_5.png)
 
 ## Актуальные события и регистрация на них
-![img_6.png](img_6.png)
-![img_7.png](img_7.png)
-![img_8.png](img_8.png)
+![img_6.png](images/img_6.png)
+![img_7.png](images/img_7.png)
+![img_8.png](images/img_8.png)
 
 ## Профиль пользователя и вопросы огранизаторам
-![img_9.png](img_9.png)
-![img_10.png](img_10.png)
-![img_11.png](img_11.png)
-![img_12.png](img_12.png)
+![img_9.png](images/img_9.png)
+![img_10.png](images/img_10.png)
+![img_11.png](images/img_11.png)
+![img_12.png](images/img_12.png)
 
 ## Уведомление о новых событиях
-![img_13.png](img_13.png)
+![img_13.png](images/img_13.png)
 
 ## FAQ
-![img_14.png](img_14.png)
+![img_14.png](images/img_14.png)
 
 ### 👩‍💻 Для организаторов:
 
@@ -74,17 +74,17 @@
   * Внутреннее общение
 
 ## Приветствие
-![img.png](img.png)
+![img.png](images/img.png)
 
 ## Добавление нового события и рассылка участникам
-![img_1.png](img_1.png)
-![img_2.png](img_2.png)
+![img_1.png](images/img_1.png)
+![img_2.png](images/img_2.png)
 
 ## Создание FAQ
-![img_3.png](img_3.png)
+![img_3.png](images/img_3.png)
 
 ## Рассылка объявлений участникам
-![img_4.png](img_4.png)
+![img_4.png](images/img_4.png)
 
 ---
 
