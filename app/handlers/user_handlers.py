@@ -57,11 +57,14 @@ async def cmd_start(message: Message, command: CommandObject):
             await message.answer("Вот тебе помощь!")
         event = await rq.find_event(int(command.args))
         # отправить фото
+
+        tg_id = message.from_user.id
+        user_id = await rq.user_id_by_tg_id(tg_id)
         await message.answer(
             f'{event.title}\n'
             f'{event.description}\n'
             f'{event.datetime}\n',
-            reply_markup=await kb.inline_event_description(event.id)
+            reply_markup=await kb.inline_event_description(user_id, event.id)
         )
 
 
@@ -72,10 +75,44 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     user_id = await rq.user_id_by_tg_id(tg_id)
     add_succses = await rq.add_user_on_event(user_id, event_id)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на событие')
+        await callback.answer(f'Вы зарегистрированы на событие',
+                              reply_markup=kb.main_reply)
+
     else:
         await rq.add_to_event_waiting_list(user_id, event_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
+
+
+@user_router.callback_query(F.data.startswith('master_classes_of_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    event_id = int(callback.data.removeprefix('master_classes_of_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    masterclasses = await rq.get_all_master_classes(event_id)
+    for masterclass in masterclasses:
+        await callback.answer(
+            f'{masterclass.title}\n'
+            f'{masterclass.description}\n'
+            f'{masterclass.datetime}\n',
+            reply_markup=await kb.inline_masterclass_description(user_id, masterclass.id)
+        )
+
+
+@user_router.callback_query(F.data.startswith('reg_on_masterclass_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    masterclass_id = int(callback.data.removeprefix('reg_on_event_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    add_succses = await rq.add_user_on_master_class(user_id, masterclass_id)
+    if add_succses:
+        await callback.answer(f'Вы зарегистрированы на мастеркласс',
+                              reply_markup=kb.main_reply)
+    else:
+        await rq.add_to_masterclass_waiting_list(user_id, masterclass_id)
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
+
 
 
 @user_router.message(Command("help"))
@@ -249,7 +286,7 @@ async def reg_four(message: Message, state: FSMContext):
         f'Имя: {data["first_name"]}\n'
         f'Фамилия: {data["second_name"]}\n'
         f'Номер: {data["number"]}',
-        reply_markup=kb.reply_test
+        reply_markup=kb.main_reply
     )
     await state.clear()
 

@@ -391,7 +391,7 @@ async def get_all_tg_ids() -> list[int]:
         return tg_ids
 
 
-async def show_all_events_of_user(user_instance: UserClass):
+async def show_all_events_of_user(user_id: int):
     async with AsyncSessionLocal() as session:
         current_datetime = datetime.now()
 
@@ -401,11 +401,31 @@ async def show_all_events_of_user(user_instance: UserClass):
             .join(UserEventConnect, Event.id == UserEventConnect.event_id)
             .where(
                 and_(
-                    UserEventConnect.user_id == user_instance.user_id,
+                    UserEventConnect.user_id == user_id,
                     Event.datetime >= current_datetime  # Только будущие события
                 )
             )
             .order_by(Event.datetime.asc())  # Сортировка по дате
+        )
+
+        return result.scalars().all()
+
+
+async def show_all_master_classes_of_user(user_id: int):
+    async with AsyncSessionLocal() as session:
+        current_datetime = datetime.now()
+
+        # Получаем все мероприятия пользователя через связующую таблицу
+        result = await session.execute(
+            select(Event)
+            .join(UserMasterclassConnect, MasterClass.id == UserMasterclassConnect.master_class_id)
+            .where(
+                and_(
+                    UserMasterclassConnect.user_id == user_id,
+                    MasterClass.datetime >= current_datetime  # Только будущие события
+                )
+            )
+            .order_by(MasterClass.datetime.asc())  # Сортировка по дате
         )
 
         return result.scalars().all()
@@ -425,3 +445,15 @@ async def add_faq(question: str, answer: str) -> None:
             await session.execute(
                 insert(FAQ).values(question=question, answer=answer)
             )
+
+
+async def get_registered_users_for_event(event_title: str) -> list[int]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User.tg_id)
+            .join(UserEventConnect, User.user_id == UserEventConnect.user_id)
+            .join(Event, UserEventConnect.event_id == Event.id)
+            .where(Event.title == event_title)
+        )
+        tg_ids = result.scalars().all()
+        return tg_ids

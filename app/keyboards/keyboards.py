@@ -1,5 +1,6 @@
 from aiogram.types import (ReplyKeyboardMarkup, KeyboardButton,
                                 InlineKeyboardMarkup, InlineKeyboardButton)
+import database.requests.requests as rq
 
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
@@ -45,9 +46,26 @@ reply_test = ReplyKeyboardMarkup(
 )
 
 
-async def inline_event_description(event_id: int):
+async def inline_event_description(user_id: int, event_id: int):
+    events = await rq.show_all_events_of_user(user_id)
     keyboard = InlineKeyboardBuilder()
+    for event in events:
+        if event.id == event_id:
+            keyboard.add(InlineKeyboardButton(text='Мастерклассы', callback_data=f'master_classes_of_{event_id}'))
+            return keyboard.adjust(1).as_markup()
+
     keyboard.add(InlineKeyboardButton(text='Зарегистрироваться', callback_data=f'reg_on_event_{event_id}'))
+    keyboard.add(InlineKeyboardButton(text='Мастерклассы', callback_data=f'master_classes_of_{event_id}'))
+    return keyboard.adjust(1).as_markup()
+
+
+async def inline_masterclass_description(user_id: int, masterclass_id: int):
+    masterclasses = await rq.show_all_master_classes_of_user(user_id)
+    keyboard = InlineKeyboardBuilder()
+    for masterclass in masterclasses:
+        if masterclass_id == masterclass.id:
+            return keyboard.as_markup()
+    keyboard.add(InlineKeyboardButton(text='Зарегистрироваться', callback_data=f'reg_on_masterclass_{masterclass_id}'))
     return keyboard.adjust(1).as_markup()
 
 
