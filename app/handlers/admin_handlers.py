@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
 from aiogram import Bot, F, Router
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import app.validators as val
 from utils.admin_utils import admin_required
 from source.working_classes import Event
@@ -16,6 +17,7 @@ import utils.text_utils as tu
 
 
 admin_router = Router()
+scheduler = AsyncIOScheduler()
 
 
 class AddEvent(StatesGroup):
@@ -112,11 +114,37 @@ async def add_event_end(message: Message, state: FSMContext):
                       _vacant_places=data['vacant_places'],
                       _location=data['address'])
         await add_event_if_not_exists(event)
-        await message.answer("Событие добавлено",
+        await message.answer("Событие добавлено. Всех зарегистрировавшихся уведомят за час!",
                              reply_markup=ak.send_everyone_event_creation)
+        broadcast_time = event._start_time - timedelta(hours=1)
+        scheduler.add_job(
+            send_event_broadcast,
+            'date',
+            run_date=broadcast_time,
+            args=[event, message.bot]
+        )
         await state.set_state(AddEvent.send)
     else:
         await message.answer(text='Некорректный адрес, попробуй ввести еще раз')
+
+async def send_event_broadcast(event: Event, bot: Bot):
+    message_text = (
+        f"Уже через час!  *{event._title}*!\n"
+        f"📍 Где: {event._location}\n"
+        f"ℹ {event._description}\n"
+        "Не пропустите!"
+    )
+    users = await rq.get_registered_users_for_event()
+    for user_id in users:
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text=message_text,
+                parse_mode="Markdown"
+            )
+            await asyncio.sleep(0.05)
+        except Exception as e:
+            print(f"{e} for user {user_id}")
 
 
 @admin_router.message(

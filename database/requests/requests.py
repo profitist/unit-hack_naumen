@@ -413,3 +413,15 @@ async def add_faq(question: str, answer: str) -> None:
             await session.execute(
                 insert(FAQ).values(question=question, answer=answer)
             )
+
+
+async def get_registered_users_for_event(event_title: str) -> list[int]:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User.tg_id)
+            .join(UserEventConnect, User.user_id == UserEventConnect.user_id)
+            .join(Event, UserEventConnect.event_id == Event.id)
+            .where(Event.title == event_title)
+        )
+        tg_ids = result.scalars().all()
+        return tg_ids
