@@ -71,7 +71,7 @@ async def cmd_start(message: Message, command: CommandObject):
         else:
             photo = BufferedInputFile(event.icon_photo, filename="event.jpg")
             await message.answer_photo(
-                photo=photo,
+                photo=photo
             )
 
             tg_id = message.from_user.id
@@ -91,8 +91,11 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
     qr_code = await qr.generate_qr_code(tg_id, user_id)
+    qr_code_photo = BufferedInputFile(qr_code, filename="event.jpg")
     add_succses = await rq.add_user_on_event(user_id, event_id, qr_code)
     if add_succses:
+        await callback.message.answer(text='Вот твой QR-cod. Он понадобится тебе, чтобы пройти на мероприятие')
+        await callback.message.answer_photo(photo=qr_code_photo)
         await callback.message.answer(f'Вы зарегистрированы на событие',
                               reply_markup=kb.main_reply)
 
@@ -104,7 +107,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data.startswith('master_classes_of_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
-    event_id = int(callback.data.removeprefix('activity_of_event_'))
+    event_id = int(callback.data.removeprefix('master_classes_of_'))
     masterclasses = await rq.get_all_master_classes(event_id)
     event_id = int(callback.data.removeprefix('master_classes_of_'))
     tg_id = callback.from_user.id
