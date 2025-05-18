@@ -75,7 +75,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     user_id = await rq.user_id_by_tg_id(tg_id)
     add_succses = await rq.add_user_on_event(user_id, event_id)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на событие',
+        await callback.message.answer(f'Вы зарегистрированы на событие',
                               reply_markup=kb.main_reply)
 
     else:
@@ -91,7 +91,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     user_id = await rq.user_id_by_tg_id(tg_id)
     masterclasses = await rq.get_all_master_classes(event_id)
     for masterclass in masterclasses:
-        await callback.answer(
+        await callback.message.answer(text=
             f'{masterclass.title}\n'
             f'{masterclass.description}\n'
             f'{masterclass.datetime}\n',
@@ -101,16 +101,16 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data.startswith('reg_on_masterclass_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
-    masterclass_id = int(callback.data.removeprefix('reg_on_event_'))
+    masterclass_id = int(callback.data.removeprefix('reg_on_masterclass_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
     add_succses = await rq.add_user_on_master_class(user_id, masterclass_id)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на мастеркласс',
+        await callback.message.answer(text=f'Вы зарегистрированы на мастеркласс',
                               reply_markup=kb.main_reply)
     else:
         await rq.add_to_masterclass_waiting_list(user_id, masterclass_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+        await callback.message.answer(text='К сожалению, мест нет, добавили вас в лист ожидания',
                               reply_markup=kb.main_reply)
 
 

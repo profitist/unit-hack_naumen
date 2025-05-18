@@ -417,7 +417,7 @@ async def show_all_master_classes_of_user(user_id: int):
 
         # Получаем все мероприятия пользователя через связующую таблицу
         result = await session.execute(
-            select(Event)
+            select(MasterClass)
             .join(UserMasterclassConnect, MasterClass.id == UserMasterclassConnect.master_class_id)
             .where(
                 and_(
