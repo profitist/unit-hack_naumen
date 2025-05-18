@@ -263,6 +263,79 @@ async def get_masterclass_waiting_list(master_class_id: int) -> list[User]:
         return result.scalars().all()
 
 
+async def get_user_waiting_events(user_id: int) -> list[tuple[Event, int]]:
+    """
+    Возвращает список мероприятий, где пользователь в очереди ожидания,
+    вместе с их позицией в очереди
+    """
+    async with AsyncSessionLocal() as session:
+        # Получаем все мероприятия в очереди ожидания для пользователя
+        result = await session.execute(
+            select(Event, EventWaitingList.date_of_registration)
+            .join(EventWaitingList, Event.id == EventWaitingList.event_id)
+            .where(EventWaitingList.user_id == user_id)
+            .order_by(EventWaitingList.date_of_registration.asc())
+        )
+
+        events_with_dates = result.all()
+
+        # Для каждого мероприятия получаем позицию в очереди
+        waiting_events = []
+        for event, _ in events_with_dates:
+            # Получаем всех в очереди на это мероприятие
+            all_waiting = await session.execute(
+                select(EventWaitingList.user_id)
+                .where(EventWaitingList.event_id == event.id)
+                .order_by(EventWaitingList.date_of_registration.asc())
+            )
+            waiting_list = all_waiting.scalars().all()
+
+            # Находим позицию текущего пользователя
+            try:
+                position = waiting_list.index(user_id) + 1
+                waiting_events.append((event, position))
+            except ValueError:
+                continue
+
+        return waiting_events
+
+
+async def get_user_waiting_masterclasses(user_id: int) -> list[tuple[MasterClass, int]]:
+    """
+    Возвращает список мастер-классов, где пользователь в очереди ожидания,
+    вместе с их позицией в очереди
+    """
+    async with AsyncSessionLocal() as session:
+        # Получаем все мастер-классы в очереди ожидания для пользователя
+        result = await session.execute(
+            select(MasterClass, MasterClassWaitingList.date_of_registration)
+            .join(MasterClassWaitingList, MasterClass.id == MasterClassWaitingList.master_class_id)
+            .where(MasterClassWaitingList.user_id == user_id)
+            .order_by(MasterClassWaitingList.date_of_registration.asc())
+        )
+
+        masterclasses_with_dates = result.all()
+
+        # Для каждого мастер-класса получаем позицию в очереди
+        waiting_masterclasses = []
+        for masterclass, _ in masterclasses_with_dates:
+            # Получаем всех в очереди на этот мастер-класс
+            all_waiting = await session.execute(
+                select(MasterClassWaitingList.user_id)
+                .where(MasterClassWaitingList.master_class_id == masterclass.id)
+                .order_by(MasterClassWaitingList.date_of_registration.asc())
+            )
+            waiting_list = all_waiting.scalars().all()
+
+            # Находим позицию текущего пользователя
+            try:
+                position = waiting_list.index(user_id) + 1
+                waiting_masterclasses.append((masterclass, position))
+            except ValueError:
+                continue
+
+        return waiting_masterclasses
+
 async def promote_from_waiting_list(event_id: int, count: int = 1) -> int:
     """
     Переводит первых N пользователей из листа ожидания в зарегистрированные

@@ -315,6 +315,35 @@ async def reg_four(message: Message, state: FSMContext):
     await state.clear()
 
 
+@user_router.message(F.text == "Мои очереди")
+async def show_waiting_lists(message: Message):
+    user_id = await rq.user_id_by_tg_id(message.from_user.id)
+
+    # Получаем очереди на мероприятия
+    event_waiting = await rq.get_user_waiting_events(user_id)
+    # Получаем очереди на мастер-классы
+    masterclass_waiting = await rq.get_user_waiting_masterclasses(user_id)
+
+    if not event_waiting and not masterclass_waiting:
+        await message.answer("Вы не находитесь ни в одной очереди ожидания.")
+        return
+
+    response = "📝 Ваши текущие очереди:\n\n"
+
+    if event_waiting:
+        response += "🎭 Мероприятия:\n"
+        for event, position in event_waiting:
+            response += f"- {event.title}: ваша позиция {position}\n"
+        response += "\n"
+
+    if masterclass_waiting:
+        response += "🎨 Мастер-классы:\n"
+        for masterclass, position in masterclass_waiting:
+            response += f"- {masterclass.title}: ваша позиция {position}\n"
+
+    await message.answer(response)
+
+
 @user_router.message(F.text == "Актуальные события 🗓")
 async def get_all_events(message: Message):
     events = await rq.show_all_events()

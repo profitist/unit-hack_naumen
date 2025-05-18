@@ -15,7 +15,8 @@ admin = ReplyKeyboardMarkup(
 main_reply = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Зарегистрироваться ✔"), KeyboardButton(text="Актуальные события 🗓")],
-        [KeyboardButton(text="Мой профиль"), KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")],
+        [KeyboardButton(text="Мой профиль"), KeyboardButton(text="Мои очереди")],
+        [KeyboardButton(text="О нас ℹ️"), KeyboardButton(text="Задать вопрос")],
         [KeyboardButton(text='FAQ 🧐')]
     ],
     resize_keyboard=True
