@@ -48,7 +48,7 @@ async def cmd_start(message: Message, command: CommandObject):
         is_admin = await rq.is_admin(message.from_user.id)
         if is_admin:
             await message.answer(tu.send_start_admin_user_message(message),
-                                 reply_markup=kb.admin)
+                                 reply_markup=ak.admin_menu)
         else:
             await message.answer(tu.send_start_common_user_message(message),
                                  reply_markup=kb.main_reply)
@@ -79,13 +79,10 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
 
 
-
-
-
-
 @user_router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
+
 
 @user_router.message(F.text == "О нас ℹ️")
 async def get_info(message: Message):
@@ -96,7 +93,7 @@ async def get_info(message: Message):
     )
 
 
-# Запрос вопроса
+
 @user_router.message(F.text == "Задать вопрос")
 async def ask_question(message: Message, state: FSMContext):
     await state.set_state(Ask.waiting_for_question)
@@ -147,6 +144,7 @@ async def reply_to_user(message: Message, bot):
 #     # тут взаимодейтвие с бд для регистрации
 #     await callback.answer('')
 #     await callback.message.edit_text('Ты зареган!иди гулйя га меро', reply_markup=await kb.inline_manus())
+
 
 
 @user_router.callback_query(F.data == "back_in_reg")
@@ -283,5 +281,5 @@ async def faq(message: Message):
     print(faqs[1].question)
     for faq in faqs:
         text_message += faq.question + '\n\n'
-        text_message += faq.answer
+        text_message += faq.answer + '\n\n'
     await message.answer(text_message, reply_markup=kb.main_reply)

@@ -5,15 +5,17 @@ from aiogram import Bot, F, Router
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from io import BytesIO
 import app.validators as val
 from utils.admin_utils import admin_required
 from source.working_classes import Event
 import asyncio
-from database.requests.requests import add_event_if_not_exists
 import app.keyboards.admin_keyboards as ak
 import database.requests.requests as rq
 import utils.text_utils as tu
-
+import aiofiles
+import uuid
+import os
 
 admin_router = Router()
 
@@ -24,6 +26,7 @@ class AddEvent(StatesGroup):
     date = State()
     vacant_places = State()
     address = State()
+    photo = State()
     send = State()
 
 
@@ -92,12 +95,34 @@ async def add_event_5(message: Message, state: FSMContext):
         if counter <= 0:
             raise ValueError
         await state.update_data(vacant_places=counter)
-        await state.set_state(AddEvent.address)
-        await message.answer(text='Давай укажем адреc, '
-                                  'по которому будет проводиться Ивент')
+        await state.set_state(AddEvent.photo)
+        await message.answer(text='Пришли фотку для иконки мероприятия')
     except ValueError:
         await message.answer(text='Некорректный ввод!\n '
                                   'Проверь, что вводишь число!')
+
+
+@admin_router.message(AddEvent.photo)
+@admin_required
+async def add_event_6(message: Message, state: FSMContext):
+    if message.photo is None:
+        await state.set_state(AddEvent.address)
+        await message.answer(text='Фото не добавлено, '
+                                  'введите адрес мероприятия')
+        return
+    photo = message.photo[-1]
+    file = await message.bot.get_file(photo.file_id)
+
+    file_stream = BytesIO()
+    await message.bot.download_file(file.file_path, destination=file_stream)
+    file_stream.seek(0)
+
+    photo_bytes = file_stream.read()
+    await state.update_data(photo=photo_bytes)
+
+    await message.answer("Фото прикреплено к событию\n\n"
+                         "Введите адрес запланированного события")
+    await state.set_state(AddEvent.address)
 
 
 @admin_router.message(AddEvent.address)
@@ -110,8 +135,9 @@ async def add_event_end(message: Message, state: FSMContext):
         event = Event(_title=data['title'], _description=data['description'],
                       _start_time=data['date'],
                       _vacant_places=data['vacant_places'],
-                      _location=data['address'])
-        await add_event_if_not_exists(event)
+                      _location=data['address'],
+                      )
+        await rq.add_event_if_not_exists(event, data.get('photo'))
         await message.answer("Событие добавлено",
                              reply_markup=ak.send_everyone_event_creation)
         await state.set_state(AddEvent.send)
@@ -121,13 +147,13 @@ async def add_event_end(message: Message, state: FSMContext):
 
 @admin_router.message(
     F.text == 'Уведомить всех о новом событии',
-    AddEvent.send  # Проверяем состояние
+    AddEvent.send
 )
 @admin_required
 async def send_everybody_event_info(message: Message, state: FSMContext):
     data = await state.get_data()
     text = tu.send_notification_of_creating_event(data)
-    await send_message_to_everybody(message.bot, text)
+    await send_message_to_everybody(message, message.bot, text)
     await state.clear()
 
 

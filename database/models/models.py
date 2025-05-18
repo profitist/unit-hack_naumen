@@ -31,6 +31,7 @@ class Event(Base):
     vacant_places: Mapped[int] = mapped_column(Integer)
     address: Mapped[str | None] = mapped_column(String(100))
     map_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
+    icon_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
 
 
 class UserEventConnect(Base):
@@ -73,6 +74,7 @@ class MasterClass(Base):
     datetime: Mapped[datetime | None] = mapped_column(DateTime())
     vacant_places: Mapped[int] = mapped_column(Integer)
     map_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
+    icon_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
 
 
 class UserMasterclassConnect(Base):

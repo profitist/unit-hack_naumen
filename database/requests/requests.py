@@ -307,7 +307,8 @@ async def promote_from_waiting_list(event_id: int, count: int = 1) -> int:
             return promoted
 
 
-async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
+async def add_event_if_not_exists(
+        event_instance: EventDTO, photo: bytes = None) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
             existing_event = await session.execute(
@@ -320,7 +321,8 @@ async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
                     description=event_instance.description,
                     datetime=event_instance.start_time,
                     vacant_places=event_instance._vacant_places,
-                    address=event_instance._location
+                    address=event_instance._location,
+                    icon_photo=photo
                 )
                 session.add(new_event)
                 await session.flush()
