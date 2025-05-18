@@ -350,9 +350,14 @@ async def is_admin(user_id: int) -> bool:
         return user.is_admin
 
 
-async def user_id_by_tg_id(tg_id):
-    return True
-# TO DO
+async def user_id_by_tg_id(tg_id: int) -> int | None:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User.user_id)
+            .where(User.tg_id == tg_id)
+        )
+        user_id = result.scalar_one_or_none()
+        return user_id
 
 
 async def get_all_tg_ids() -> list[int]:
