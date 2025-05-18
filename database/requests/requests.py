@@ -393,7 +393,7 @@ async def get_all_tg_ids() -> list[int]:
         return tg_ids
 
 
-async def show_all_events_of_user(user_instance: UserClass):
+async def show_all_events_of_user(user_id: int):
     async with AsyncSessionLocal() as session:
         current_datetime = datetime.now()
 
@@ -403,11 +403,31 @@ async def show_all_events_of_user(user_instance: UserClass):
             .join(UserEventConnect, Event.id == UserEventConnect.event_id)
             .where(
                 and_(
-                    UserEventConnect.user_id == user_instance.user_id,
+                    UserEventConnect.user_id == user_id,
                     Event.datetime >= current_datetime  # Только будущие события
                 )
             )
             .order_by(Event.datetime.asc())  # Сортировка по дате
+        )
+
+        return result.scalars().all()
+
+
+async def show_all_master_classes_of_user(user_id: int):
+    async with AsyncSessionLocal() as session:
+        current_datetime = datetime.now()
+
+        # Получаем все мероприятия пользователя через связующую таблицу
+        result = await session.execute(
+            select(MasterClass)
+            .join(UserMasterclassConnect, MasterClass.id == UserMasterclassConnect.master_class_id)
+            .where(
+                and_(
+                    UserMasterclassConnect.user_id == user_id,
+                    MasterClass.datetime >= current_datetime  # Только будущие события
+                )
+            )
+            .order_by(MasterClass.datetime.asc())  # Сортировка по дате
         )
 
         return result.scalars().all()

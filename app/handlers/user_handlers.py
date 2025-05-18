@@ -71,11 +71,15 @@ async def cmd_start(message: Message, command: CommandObject):
             await message.answer_photo(
                 photo=photo,
             )
+
+            tg_id = message.from_user.id
+            user_id = await rq.user_id_by_tg_id(tg_id)
+
             await message.answer(text=f'{event.title}\n'
                                       f'{event.description}\n'
                                       f'{event.datetime}\n',
                                  reply_markup=
-                                 await kb.inline_event_description(event.id)
+                                 await kb.inline_event_description(user_id, event.id)
                                  )
 
 
@@ -87,36 +91,45 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     qr_code = await qr.generate_qr_code(tg_id, user_id)
     add_succses = await rq.add_user_on_event(user_id, event_id, qr_code)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на событие')
+        await callback.message.answer(f'Вы зарегистрированы на событие',
+                              reply_markup=kb.main_reply)
+
     else:
         await rq.add_to_event_waiting_list(user_id, event_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
 
 
-@user_router.callback_query(F.data.startswith('activity_of_event_'))
+@user_router.callback_query(F.data.startswith('master_classes_of_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
     event_id = int(callback.data.removeprefix('activity_of_event_'))
     masterclasses = await rq.get_all_master_classes(event_id)
+    event_id = int(callback.data.removeprefix('master_classes_of_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    masterclasses = await rq.get_all_master_classes(event_id)
     for masterclass in masterclasses:
-        await callback.answer(
+        await callback.message.answer(text=
             f'{masterclass.title}\n'
             f'{masterclass.description}\n'
             f'{masterclass.datetime}\n',
-            reply_markup=await kb.inline_masterclass_description(masterclass.id)
+            reply_markup=await kb.inline_masterclass_description(user_id, masterclass.id)
         )
 
 
 @user_router.callback_query(F.data.startswith('reg_on_masterclass_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
-    masterclass_id = int(callback.data.removeprefix('reg_on_event_'))
+    masterclass_id = int(callback.data.removeprefix('reg_on_masterclass_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
     add_succses = await rq.add_user_on_master_class(user_id, masterclass_id)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на мастеркласс')
+        await callback.message.answer(text=f'Вы зарегистрированы на мастеркласс',
+                              reply_markup=kb.main_reply)
     else:
         await rq.add_to_masterclass_waiting_list(user_id, masterclass_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await callback.message.answer(text='К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
 
 
 
@@ -134,6 +147,7 @@ async def get_info(message: Message):
     )
 
 
+# Запрос вопроса
 @user_router.message(F.text == "Задать вопрос")
 async def ask_question(message: Message, state: FSMContext):
     await state.set_state(Ask.waiting_for_question)
@@ -212,6 +226,13 @@ async def start_registration(message: Message, state: FSMContext):
     await message.answer("Введите имя (только буквы, от 2 до 30 символов)",
                          reply_markup=kb.reg_back_inline)
 
+
+@user_router.message(F.text == "Мой профиль")
+async def start_registration(message: Message):
+    await message.answer("Это твой профиль."
+                         "\nТут ты можешь узнать, на какие мероприятия ты записался, какой ты в очереди, получить QR-код на мероприятие"
+                         "\nТак же ты можешь проверить и исправить свои данные,",
+                         reply_markup=kb.profile_reply)
     # TO DO
     # Список активностей в которых зареган
     # Список очередей в которых находится
@@ -284,7 +305,7 @@ async def reg_four(message: Message, state: FSMContext):
         f'Имя: {data["first_name"]}\n'
         f'Фамилия: {data["second_name"]}\n'
         f'Номер: {data["number"]}',
-        reply_markup=kb.reply_test
+        reply_markup=kb.main_reply
     )
     await state.clear()
 
