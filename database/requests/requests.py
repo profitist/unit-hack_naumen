@@ -19,6 +19,7 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
 
             if existing_user is None:
                 new_user = User(
+                    user_id=user_instance.tg_id,
                     tg_id=user_instance.tg_id,
                     username=user_instance.username,
                     first_name=user_instance.first_name,
