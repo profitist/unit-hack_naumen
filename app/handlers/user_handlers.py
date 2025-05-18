@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 import app.validators as val
 import database.requests.requests as rq
 import app.keyboards.keyboards as kb
+import app.keyboards.admin_keyboards as ak
 import utils.text_utils as tu
 from source.user import UserClass
 from database.requests.requests import add_user_if_not_exists
@@ -61,7 +62,7 @@ async def get_start(message: Message):
     is_admin = await rq.is_admin(message.from_user.id)
     if is_admin:
         await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=kb.admin_menu)
+                             reply_markup=ak.admin_menu)
     else:
         await message.answer(tu.send_start_common_user_message(message),
                              reply_markup=kb.main_reply)
@@ -254,3 +255,18 @@ async def get_all_events(message: Message):
             parse_mode="HTML"
         )
 
+
+@user_router.message(F.text.startswith('FAQ'))
+async def faq(message: Message):
+    faqs = await rq.get_faq()
+    if not faqs:
+        await message.answer('Мы никомы не нужны',
+                             reply_markup=kb.main_reply)
+        return
+    text_message = ''
+    print(faqs[0].question)
+    print(faqs[1].question)
+    for faq in faqs:
+        text_message += faq.question + '\n\n'
+        text_message += faq.answer
+    await message.answer(text_message, reply_markup=kb.main_reply)

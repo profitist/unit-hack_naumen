@@ -1,8 +1,8 @@
 from datetime import datetime
 
-from aiogram.types import Message, InlineKeyboardMarkup
-from aiogram import Bot
-from aiogram import F, Router
+from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
+from aiogram import Bot, F, Router
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import app.validators as val
@@ -13,6 +13,7 @@ from database.requests.requests import add_event_if_not_exists
 import app.keyboards.admin_keyboards as ak
 import database.requests.requests as rq
 import utils.text_utils as tu
+
 
 admin_router = Router()
 
@@ -88,6 +89,8 @@ async def add_event_5(message: Message, state: FSMContext):
     answer = message.text
     try:
         counter = int(answer)
+        if counter <= 0:
+            raise ValueError
         await state.update_data(vacant_places=counter)
         await state.set_state(AddEvent.address)
         await message.answer(text='Давай укажем адреc, '
@@ -120,7 +123,7 @@ async def add_event_end(message: Message, state: FSMContext):
     F.text == 'Уведомить всех о новом событии',
     AddEvent.send  # Проверяем состояние
 )
-@admin_router.message(AddEvent.send)
+@admin_required
 async def send_everybody_event_info(message: Message, state: FSMContext):
     data = await state.get_data()
     text = tu.send_notification_of_creating_event(data)
@@ -140,17 +143,19 @@ async def start_broadcast(message: Message, state: FSMContext):
 async def send_broadcast(message: Message, state: FSMContext):
     broadcast_message = message.text
     if len(broadcast_message) > 0:
-        await send_message_to_everybody(message.bot, broadcast_message)
+        await send_message_to_everybody(message, message.bot, broadcast_message)
         await state.clear()
     else:
         await message.answer(text='Сообщение не может быть пустым. Попробуйте еще раз.')
 
 
-async def send_message_to_everybody(bot: Bot, broadcast_message: str):
+async def send_message_to_everybody(
+        message: Message, bot: Bot, broadcast_message: str):
     users = await rq.get_all_tg_ids()
     success_count = 0
     fail_count = 0
-
+    await message.answer(text='Рассылка о событии началась...',
+                         reply_markup=ReplyKeyboardRemove())
     for user_id in users:
         try:
             print(user_id)
@@ -160,3 +165,57 @@ async def send_message_to_everybody(bot: Bot, broadcast_message: str):
         except Exception as e:
             fail_count += 1
 
+    await message.answer(text='Рассылка завершена!', reply_markup=ak.admin_menu)
+
+
+class FaqAdd(StatesGroup):
+    message = State()
+    apply = State()
+
+
+@admin_router.message(F.text == 'Создать FAQ')
+@admin_required
+async def add_faq_question(message: Message, state: FSMContext):
+    await message.answer('Введите текст вопроса 😊')
+    await state.set_state(FaqAdd.message)
+
+
+@admin_router.message(FaqAdd.message)
+@admin_required
+async def add_faq_answer(message: Message, state: FSMContext):
+    await state.update_data(faq_question=message.text)
+    await state.set_state(FaqAdd.apply)
+    await message.answer(text='Введите ответ на вопрос: 😊')
+
+
+@admin_router.message(FaqAdd.apply)
+@admin_required
+async def add_faq_answer(message: Message, state: FSMContext):
+    await state.update_data(faq_answer=message.text)
+    data = await state.get_data()
+    await state.set_state(FaqAdd.message)
+    await message.answer(text=f'FAQ добавлен, проверьте содержимое:\n'
+                              f'Вопрос: {data["faq_question"]}\n\n'
+                              f'Ответ: {data["faq_answer"]}\n\n'
+                              f'Добавить вопрос?',
+                         reply_markup=ak.accept_add_faq)
+
+
+@admin_router.callback_query(F.data == 'accept_add_faq')
+@admin_required
+async def accept_add_faq_callback_query(
+        callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await rq.add_faq(data['faq_question'], data['faq_answer'])
+    await callback.message.answer('Вопрос добавлен ✅',
+                                  reply_markup=ak.admin_menu)
+    await state.clear()
+
+
+@admin_router.callback_query(F.data == 'deny_add_faq')
+@admin_required
+async def deny_add_faq_callback_query(
+        callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer('Создание вопроса отменено ❌',
+                                  reply_markup=ak.admin_menu)
+    await state.clear()

@@ -1,9 +1,8 @@
 from sqlalchemy import select, insert, delete, and_
 from database.session import AsyncSessionLocal
-from database.models.models import User
+from database.models.models import *
 from source.user import UserClass
 from database.models.models import UserEventConnect
-from database.models.models import Event
 from source.working_classes import Event as EventDTO
 from datetime import datetime
 
@@ -30,6 +29,18 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
                 await session.flush()  # Получаем сгенерированный user_id
                 return new_user
             return existing_user
+
+
+async def is_registered(user_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            existing_user = await session.execute(
+                select(User).where(User.tg_id == user_id)
+            )
+            existing_user = existing_user.scalar_one_or_none()
+            if existing_user is None:
+                return False
+            return True
 
 
 async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
@@ -108,3 +119,19 @@ async def show_all_events_of_user(user_instance: UserClass):
         )
 
         return result.scalars().all()
+
+
+async def get_faq():
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            result = await session.execute(select(FAQ))
+            faq_items = result.scalars().all()
+            return faq_items
+
+
+async def add_faq(question: str, answer: str) -> None:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            await session.execute(
+                insert(FAQ).values(question=question, answer=answer)
+            )

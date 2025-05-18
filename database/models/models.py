@@ -106,7 +106,8 @@ class MasterClassWaitingList(Base):
 class FAQ(Base):
     __tablename__ = "faq"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
+                                    autoincrement=True)
     question: Mapped[str | None] = mapped_column(Text)
     answer: Mapped[str | None] = mapped_column(Text)
     category: Mapped[str | None] = mapped_column(String(100))
