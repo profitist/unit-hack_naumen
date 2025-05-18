@@ -169,7 +169,7 @@ async def send_event_broadcast(event: Event, bot: Bot):
 async def send_everybody_event_info(message: Message, state: FSMContext):
     data = await state.get_data()
     text = tu.send_notification_of_creating_event(data)
-    await send_message_to_everybody(message.bot, text)
+    await send_message_to_everybody(message, message.bot, broadcast_message=text)
     await state.clear()
 
 

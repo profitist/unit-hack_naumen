@@ -59,12 +59,14 @@ async def cmd_start(message: Message, command: CommandObject):
         if command.args == 'test':
             await message.answer("Вот тебе помощь!")
         event = await rq.find_event(int(command.args))
+        tg_id = message.from_user.id
+        user_id = await rq.user_id_by_tg_id(tg_id)
         if event.icon_photo is None:
             await message.answer(text=f'{event.title}\n'
                                       f'{event.description}\n'
                                       f'{event.datetime}\n',
                                  reply_markup=
-                                 await kb.inline_event_description(event.id)
+                                 await kb.inline_event_description(user_id, event.id)
         )
         else:
             photo = BufferedInputFile(event.icon_photo, filename="event.jpg")
@@ -317,7 +319,7 @@ async def get_all_events(message: Message):
         await message.answer(
             f'{event.title}\n'
             f'{event.datetime}\n'
-            f"<a href='https://t.me/@quote_maker_bot?start={event.id}'>Подробнее</a>",
+            f"<a href='https://t.me/naume_pivo_n_bot?start={event.id}'>Подробнее</a>",
             parse_mode="HTML"
         )
 
