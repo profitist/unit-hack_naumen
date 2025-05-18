@@ -1,10 +1,13 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, \
-    ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import (InlineKeyboardButton, InlineKeyboardMarkup,
+        ReplyKeyboardMarkup, KeyboardButton)
+
+from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 
 admin_menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Добавить новое событие")],
+        [KeyboardButton(text="Добавить новый мастер класс")],
         [KeyboardButton(text="Актуальные события 🗓")],
         [KeyboardButton(text="Сделать рассылку"),
          KeyboardButton(text='Создать FAQ')]
@@ -25,3 +28,10 @@ accept_add_faq = InlineKeyboardMarkup(
          InlineKeyboardButton(text='❌', callback_data='deny_add_faq')]
     ]
 )
+
+
+async def inline_events_names(events):
+    keyboard = InlineKeyboardBuilder()
+    for event in events:
+        keyboard.add(InlineKeyboardButton(text=f'{event.title}', callback_data=f'chose_event_{event.id}'))
+    return keyboard.adjust(1).as_markup()
