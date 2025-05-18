@@ -35,17 +35,16 @@ class Ask(StatesGroup):
 
 async def set_commands(bot):
     commands = [
-        BotCommand(command="/start_chat", description="Начало работы"),
+        BotCommand(command="/start", description="Начало работы"),
         BotCommand(command="/help", description="Помощь"),
         BotCommand(command="/reg", description="Регистрация"),
     ]
     await bot.set_my_commands(commands)
 
 
-
-@user_router.message(CommandStart(deep_link=True))
+@user_router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
-    if command.args is None:
+    if command.args is None or len(command.args) == 0:
         is_admin = await rq.is_admin(message.from_user.id)
         if is_admin:
             await message.answer(tu.send_start_admin_user_message(message),
@@ -53,19 +52,35 @@ async def cmd_start(message: Message, command: CommandObject):
         else:
             await message.answer(tu.send_start_common_user_message(message),
                                  reply_markup=kb.main_reply)
-    if command.args == 'test':
-        await message.answer("Вот тебе помощь!")
-
-
-@user_router.message(Command("start_chat"))
-async def get_start(message: Message):
-    is_admin = await rq.is_admin(message.from_user.id)
-    if is_admin:
-        await message.answer(tu.send_start_admin_user_message(message),
-                             reply_markup=ak.admin_menu)
     else:
-        await message.answer(tu.send_start_common_user_message(message),
-                             reply_markup=kb.main_reply)
+        if command.args == 'test':
+            await message.answer("Вот тебе помощь!")
+        event = await rq.find_event(int(command.args))
+        # отправить фото
+        await message.answer(
+            f'{event.title}\n'
+            f'{event.description}\n'
+            f'{event.datetime}\n',
+            reply_markup=await kb.inline_event_description(event.id)
+        )
+
+
+@user_router.callback_query(F.data.startswith('reg_on_event_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    event_id = int(callback.data.removeprefix('reg_on_event_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    add_succses = await rq.add_user_on_event(user_id, event_id)
+    if add_succses:
+        await callback.answer(f'Вы зарегистрированы на событие')
+    else:
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await rq.add_to_event_waiting_list(user_id, event_id)
+
+
+
+
+
 
 
 @user_router.message(Command("help"))
@@ -249,9 +264,9 @@ async def get_all_events(message: Message):
     events = await rq.show_all_events()
     for event in events:
         await message.answer(
-            f'{event.description}\n'
-            f'{event.datetime}'
-            " <a href='https://t.me/naume_pivo_n_bot?start=test'>Подробнее</a>",
+            f'{event.title}\n'
+            f'{event.datetime}\n'
+            f"<a href='https://t.me/naume_pivo_n_bot?start={event.id}'>Подробнее</a>",
             parse_mode="HTML"
         )
 

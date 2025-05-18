@@ -44,6 +44,13 @@ reply_test = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+
+async def inline_event_description(event_id: int):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Зарегистрироваться', callback_data=f'reg_on_event_{event_id}'))
+    return keyboard.adjust(1).as_markup()
+
+
 settings = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='ХУЙЧИК', url='https://unit-ekb.ru/')]])
 
 manus = ['Platonn228', 'IVANUS', 'STEPA', 'ZALUPA']
