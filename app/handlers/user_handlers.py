@@ -41,7 +41,6 @@ async def set_commands(bot):
     await bot.set_my_commands(commands)
 
 
-
 @user_router.message(CommandStart())
 async def cmd_start(message: Message, command: CommandObject):
     if command.args is None or len(command.args) == 0:

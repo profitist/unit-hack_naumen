@@ -79,7 +79,6 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                 return False
 
 
-
 async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
