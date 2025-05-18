@@ -55,8 +55,7 @@ async def get_all_master_classes(event_id: int) -> list[MasterClass]:
         return result.scalars().all()  # Используем scalars().all() для списка
 
 
-
-async def add_user_on_event(user_id: int, event_id: int) -> bool:
+async def add_user_on_event(user_id: int, event_id: int, qr: bytes | None) -> bool:
     async with AsyncSessionLocal() as session:
         async with session.begin():
             try:
@@ -79,7 +78,7 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                     .where(
                         and_(
                             UserEventConnect.user_id == user_id,
-                            UserEventConnect.event_id == event_id
+                            UserEventConnect.event_id == event_id,
                         )
                     )
                 )
@@ -89,7 +88,8 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                 new_reg = UserEventConnect(
                     user_id=user_id,
                     event_id=event_id,
-                    date_of_registration=datetime.now()
+                    date_of_registration=datetime.now(),
+                    qr_code=qr
                 )
                 session.add(new_reg)
                 event.vacant_places -= 1
@@ -318,7 +318,8 @@ async def promote_from_waiting_list(event_id: int, count: int = 1) -> int:
             return promoted
 
 
-async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
+async def add_event_if_not_exists(
+        event_instance: EventDTO, photo: bytes = None) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
             existing_event = await session.execute(
@@ -331,7 +332,8 @@ async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
                     description=event_instance.description,
                     datetime=event_instance.start_time,
                     vacant_places=event_instance._vacant_places,
-                    address=event_instance._location
+                    address=event_instance._location,
+                    icon_photo=photo
                 )
                 session.add(new_event)
                 await session.flush()

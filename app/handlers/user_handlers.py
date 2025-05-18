@@ -12,8 +12,11 @@ import database.requests.requests as rq
 import app.keyboards.keyboards as kb
 import app.keyboards.admin_keyboards as ak
 import utils.text_utils as tu
+import source.read_qr_code as qr
 from source.user import UserClass
 from database.requests.requests import add_user_if_not_exists
+from aiogram.types import BufferedInputFile
+from utils.admin_utils import reg_required
 
 ADMIN_CHAT_ID = -1002649837821
 # ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
@@ -56,16 +59,28 @@ async def cmd_start(message: Message, command: CommandObject):
         if command.args == 'test':
             await message.answer("Вот тебе помощь!")
         event = await rq.find_event(int(command.args))
-        # отправить фото
-
-        tg_id = message.from_user.id
-        user_id = await rq.user_id_by_tg_id(tg_id)
-        await message.answer(
-            f'{event.title}\n'
-            f'{event.description}\n'
-            f'{event.datetime}\n',
-            reply_markup=await kb.inline_event_description(user_id, event.id)
+        if event.icon_photo is None:
+            await message.answer(text=f'{event.title}\n'
+                                      f'{event.description}\n'
+                                      f'{event.datetime}\n',
+                                 reply_markup=
+                                 await kb.inline_event_description(event.id)
         )
+        else:
+            photo = BufferedInputFile(event.icon_photo, filename="event.jpg")
+            await message.answer_photo(
+                photo=photo,
+            )
+
+            tg_id = message.from_user.id
+            user_id = await rq.user_id_by_tg_id(tg_id)
+
+            await message.answer(text=f'{event.title}\n'
+                                      f'{event.description}\n'
+                                      f'{event.datetime}\n',
+                                 reply_markup=
+                                 await kb.inline_event_description(user_id, event.id)
+                                 )
 
 
 @user_router.callback_query(F.data.startswith('reg_on_event_'))
@@ -73,7 +88,8 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     event_id = int(callback.data.removeprefix('reg_on_event_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
-    add_succses = await rq.add_user_on_event(user_id, event_id)
+    qr_code = await qr.generate_qr_code(tg_id, user_id)
+    add_succses = await rq.add_user_on_event(user_id, event_id, qr_code)
     if add_succses:
         await callback.message.answer(f'Вы зарегистрированы на событие',
                               reply_markup=kb.main_reply)
@@ -86,6 +102,8 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 
 @user_router.callback_query(F.data.startswith('master_classes_of_'))
 async def go_back(callback: CallbackQuery, state: FSMContext):
+    event_id = int(callback.data.removeprefix('activity_of_event_'))
+    masterclasses = await rq.get_all_master_classes(event_id)
     event_id = int(callback.data.removeprefix('master_classes_of_'))
     tg_id = callback.from_user.id
     user_id = await rq.user_id_by_tg_id(tg_id)
@@ -118,6 +136,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
 @user_router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
+
 
 @user_router.message(F.text == "О нас ℹ️")
 async def get_info(message: Message):
@@ -298,7 +317,7 @@ async def get_all_events(message: Message):
         await message.answer(
             f'{event.title}\n'
             f'{event.datetime}\n'
-            f"<a href='https://t.me/naume_pivo_n_bot?start={event.id}'>Подробнее</a>",
+            f"<a href='https://t.me/@quote_maker_bot?start={event.id}'>Подробнее</a>",
             parse_mode="HTML"
         )
 
@@ -315,5 +334,12 @@ async def faq(message: Message):
     print(faqs[1].question)
     for faq in faqs:
         text_message += faq.question + '\n\n'
-        text_message += faq.answer
+        text_message += faq.answer + '\n\n'
     await message.answer(text_message, reply_markup=kb.main_reply)
+
+
+@user_router.message(F.text == 'Мой профиль')
+@reg_required
+async def reg(message: Message, state: FSMContext):
+    await message.answer('Вы попали в меню своего профиля 😉',
+                         reply_markup=kb.profile_reply)

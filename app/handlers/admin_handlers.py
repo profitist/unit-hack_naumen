@@ -5,6 +5,7 @@ from aiogram import Bot, F, Router
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+from io import BytesIO
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import app.validators as val
 from database.models.models import MasterClass
@@ -16,7 +17,9 @@ from database.requests.requests import add_event_if_not_exists
 import app.keyboards.admin_keyboards as ak
 import database.requests.requests as rq
 import utils.text_utils as tu
-
+import aiofiles
+import uuid
+import os
 
 admin_router = Router()
 scheduler = AsyncIOScheduler()
@@ -28,6 +31,7 @@ class AddEvent(StatesGroup):
     date = State()
     vacant_places = State()
     address = State()
+    photo = State()
     send = State()
 
 class AddMasterClass(StatesGroup):
@@ -165,7 +169,7 @@ async def send_event_broadcast(event: Event, bot: Bot):
 async def send_everybody_event_info(message: Message, state: FSMContext):
     data = await state.get_data()
     text = tu.send_notification_of_creating_event(data)
-    await send_message_to_everybody(message, message.bot, broadcast_message=text)
+    await send_message_to_everybody(message.bot, text)
     await state.clear()
 
 
