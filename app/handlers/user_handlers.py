@@ -76,11 +76,12 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     add_succses = await rq.add_user_on_event(user_id, event_id)
     if add_succses:
         await callback.answer(f'Вы зарегистрированы на событие',
-                              reply_markup=await kb.main_reply())
+                              reply_markup=kb.main_reply)
 
     else:
         await rq.add_to_event_waiting_list(user_id, event_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
 
 
 @user_router.callback_query(F.data.startswith('master_classes_of_'))
@@ -105,10 +106,12 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     user_id = await rq.user_id_by_tg_id(tg_id)
     add_succses = await rq.add_user_on_master_class(user_id, masterclass_id)
     if add_succses:
-        await callback.answer(f'Вы зарегистрированы на мастеркласс')
+        await callback.answer(f'Вы зарегистрированы на мастеркласс',
+                              reply_markup=kb.main_reply)
     else:
         await rq.add_to_masterclass_waiting_list(user_id, masterclass_id)
-        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания',
+                              reply_markup=kb.main_reply)
 
 
 
