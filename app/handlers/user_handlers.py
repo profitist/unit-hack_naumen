@@ -77,7 +77,7 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
     if add_succses:
         await callback.answer(f'Вы зарегистрированы на событие',
                               reply_markup=await kb.main_reply())
-        
+
     else:
         await rq.add_to_event_waiting_list(user_id, event_id)
         await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
