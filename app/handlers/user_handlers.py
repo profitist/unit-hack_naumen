@@ -78,11 +78,6 @@ async def go_back(callback: CallbackQuery, state: FSMContext):
         await rq.add_to_event_waiting_list(user_id, event_id)
 
 
-
-
-
-
-
 @user_router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
