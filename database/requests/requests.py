@@ -1,6 +1,6 @@
 from sqlalchemy import select, insert, delete, and_
 from database.session import AsyncSessionLocal
-from database.models.models import User
+from database.models.models import User, UserMasterclassConnect, MasterClass, MasterClassWaitingList, EventWaitingList
 from source.user import UserClass
 from database.models.models import UserEventConnect
 from database.models.models import Event
@@ -77,6 +77,221 @@ async def add_user_on_event(user_id: int, event_id: int) -> bool:
                 await session.rollback()
                 print(f"Error registering user: {e}")
                 return False
+
+
+async def add_user_on_master_class(user_id: int, master_class_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            try:
+                master_class = await session.execute(
+                    select(MasterClass)
+                    .where(
+                        and_(
+                            MasterClass.id == master_class_id,
+                            MasterClass.datetime >= datetime.now(),
+                            MasterClass.vacant_places > 0
+                        )
+                    )
+                )
+                master_class = master_class.scalar_one_or_none()
+
+                if master_class is None:
+                    return False
+
+                event_reg = await session.execute(
+                    select(UserEventConnect)
+                    .where(
+                        and_(
+                            UserEventConnect.user_id == user_id,
+                            UserEventConnect.event_id == master_class.event_id
+                        )
+                    )
+                )
+
+                if event_reg.scalar_one_or_none() is None:
+                    return False
+
+                existing_reg = await session.execute(
+                    select(UserMasterclassConnect)
+                    .where(
+                        and_(
+                            UserMasterclassConnect.user_id == user_id,
+                            UserMasterclassConnect.master_class_id == master_class_id
+                        )
+                    )
+                )
+
+                if existing_reg.scalar_one_or_none() is not None:
+                    return False
+                new_reg = UserMasterclassConnect(
+                    user_id=user_id,
+                    master_class_id=master_class_id,
+                    date_of_registration=datetime.now()
+                )
+                session.add(new_reg)
+
+                master_class.vacant_places -= 1
+
+                await session.commit()
+                return True
+
+            except Exception as e:
+                await session.rollback()
+                print(f"Error registering for master class: {e}")
+                return False
+
+
+async def add_to_event_waiting_list(user_id: int, event_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            existing_reg = await session.execute(
+                select(UserEventConnect)
+                .where(
+                    and_(
+                        UserEventConnect.user_id == user_id,
+                        UserEventConnect.event_id == event_id
+                    )
+                )
+            )
+            if existing_reg.scalar_one_or_none() is not None:
+                return False
+            existing_wait = await session.execute(
+                select(EventWaitingList)
+                .where(
+                    and_(
+                        EventWaitingList.user_id == user_id,
+                        EventWaitingList.event_id == event_id
+                    )
+                )
+            )
+            if existing_wait.scalar_one_or_none() is not None:
+                return False
+            new_wait = EventWaitingList(
+                user_id=user_id,
+                event_id=event_id,
+                date_of_registration=datetime.now()
+            )
+            session.add(new_wait)
+            await session.commit()
+            return True
+
+
+async def add_to_masterclass_waiting_list(user_id: int, master_class_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            existing_reg = await session.execute(
+                select(UserMasterclassConnect)
+                .where(
+                    and_(
+                        UserMasterclassConnect.user_id == user_id,
+                        UserMasterclassConnect.master_class_id == master_class_id
+                    )
+                )
+            )
+            if existing_reg.scalar_one_or_none() is not None:
+                return False
+            existing_wait = await session.execute(
+                select(MasterClassWaitingList)
+                .where(
+                    and_(
+                        MasterClassWaitingList.user_id == user_id,
+                        MasterClassWaitingList.master_class_id == master_class_id
+                    )
+                )
+            )
+            if existing_wait.scalar_one_or_none() is not None:
+                return False
+            new_wait = MasterClassWaitingList(
+                user_id=user_id,
+                master_class_id=master_class_id,
+                date_of_registration=datetime.now()
+            )
+            session.add(new_wait)
+            await session.commit()
+            return True
+
+
+async def get_event_waiting_list(event_id: int) -> list[User]:
+    """
+    Возвращает список пользователей в листе ожидания мероприятия
+    """
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User)
+            .join(EventWaitingList, User.user_id == EventWaitingList.user_id)
+            .where(EventWaitingList.event_id == event_id)
+            .order_by(EventWaitingList.date_of_registration.asc())
+        )
+        return result.scalars().all()
+
+
+async def get_masterclass_waiting_list(master_class_id: int) -> list[User]:
+    """
+    Возвращает список пользователей в листе ожидания мастер-класса
+    """
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(User)
+            .join(MasterClassWaitingList, User.user_id == MasterClassWaitingList.user_id)
+            .where(MasterClassWaitingList.master_class_id == master_class_id)
+            .order_by(MasterClassWaitingList.date_of_registration.asc())
+        )
+        return result.scalars().all()
+
+
+async def promote_from_waiting_list(event_id: int, count: int = 1) -> int:
+    """
+    Переводит первых N пользователей из листа ожидания в зарегистрированные
+    Возвращает количество успешно переведенных пользователей
+    """
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            # Получаем мероприятие
+            event = await session.execute(
+                select(Event).where(Event.id == event_id)
+            )
+            event = event.scalar_one_or_none()
+
+            if event is None or event.vacant_places < 1:
+                return 0
+
+            # Получаем первых N пользователей из листа ожидания
+            waiting_users = await session.execute(
+                select(EventWaitingList)
+                .where(EventWaitingList.event_id == event_id)
+                .order_by(EventWaitingList.date_of_registration.asc())
+                .limit(min(count, event.vacant_places))
+            )
+            waiting_users = waiting_users.scalars().all()
+
+            promoted = 0
+            for wait in waiting_users:
+                # Проверяем, не зарегистрирован ли уже
+                existing_reg = await session.execute(
+                    select(UserEventConnect)
+                    .where(
+                        and_(
+                            UserEventConnect.user_id == wait.user_id,
+                            UserEventConnect.event_id == event_id
+                        )
+                    )
+                )
+                if existing_reg.scalar_one_or_none() is None:
+                    # Регистрируем
+                    new_reg = UserEventConnect(
+                        user_id=wait.user_id,
+                        event_id=event_id,
+                        date_of_registration=datetime.now()
+                    )
+                    session.add(new_reg)
+                    event.vacant_places -= 1
+                    promoted += 1
+
+                    # Удаляем из листа ожидания
+                    await session.delete(wait)
+
+            await session.commit()
+            return promoted
 
 
 async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
