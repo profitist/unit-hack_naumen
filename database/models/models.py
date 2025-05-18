@@ -10,8 +10,7 @@ class Base(DeclarativeBase):
 
 class User(Base):
     __tablename__ = "users"
-    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
-                                         autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     tg_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     username: Mapped[str | None] = mapped_column(String(50))
     first_name: Mapped[str | None] = mapped_column(String(100))
@@ -32,6 +31,7 @@ class Event(Base):
     vacant_places: Mapped[int] = mapped_column(Integer)
     address: Mapped[str | None] = mapped_column(String(100))
     map_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
+    icon_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
 
 
 class UserEventConnect(Base):
@@ -74,6 +74,7 @@ class MasterClass(Base):
     datetime: Mapped[datetime | None] = mapped_column(DateTime())
     vacant_places: Mapped[int] = mapped_column(Integer)
     map_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
+    icon_photo: Mapped[bytes | None] = mapped_column(LargeBinary)
 
 
 class UserMasterclassConnect(Base):
@@ -106,7 +107,8 @@ class MasterClassWaitingList(Base):
 class FAQ(Base):
     __tablename__ = "faq"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True,
+                                    autoincrement=True)
     question: Mapped[str | None] = mapped_column(Text)
     answer: Mapped[str | None] = mapped_column(Text)
     category: Mapped[str | None] = mapped_column(String(100))

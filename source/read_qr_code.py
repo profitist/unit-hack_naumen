@@ -1,37 +1,58 @@
 import json
-from PIL import Image, ImageEnhance, ImageFilter
-from pyzbar.pyzbar import decode
+import qrcode
+from io import BytesIO
+from PIL import Image
+import cv2
+import numpy as np
 
 
-def read_qr_code(image_path):
+async def read_qr_code(image_bytes: bytes) -> dict | None:
     """
-    Возвращает расшифрованный json с qr-кода
+    Распознаёт QR-код из изображения в байтах и возвращает словарь.
     """
     try:
-        img = Image.open(image_path).convert("L")
+        # Открываем изображение через PIL
+        img = Image.open(BytesIO(image_bytes)).convert("RGB")
 
-        enhancer = ImageEnhance.Contrast(img)
-        img = enhancer.enhance(2.0)
+        # Переводим в формат, понятный OpenCV
+        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
-        img = img.filter(ImageFilter.SHARPEN)
+        # Распознаём QR-код
+        detector = cv2.QRCodeDetector()
+        data, points, _ = detector.detectAndDecode(img_cv)
 
-        img = img.point(lambda p: 255 if p > 128 else 0)
-
-        decoded_objects = decode(img)
-
-        if not decoded_objects:
+        if not data:
             return None
 
-        qr_data = decoded_objects[0].data.decode('utf-8')
+        return json.loads(data)
 
-        try:
-            qr_data_json = json.loads(qr_data)
-            #print(f"Декодированные данные: {qr_data_json}")
-            return qr_data_json
-        except json.JSONDecodeError:
-            return None
+    except Exception:
+        return None
 
-    except FileNotFoundError:
-        return None
-    except Exception as e:
-        return None
+
+async def generate_qr_code(tg_id: int, event_id: int) -> bytes:
+    """
+    Генерирует QR-код с информацией о пользователе и событии.
+    Возвращает изображение в виде байтов PNG.
+    """
+    data = {
+        "user": {"tg_id": tg_id},
+        "event": {"event_id": event_id}
+    }
+
+    data_json = json.dumps(data)
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(data_json)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    return buffer.getvalue()

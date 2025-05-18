@@ -2,6 +2,9 @@ import qrcode
 import json
 import os
 from source.working_classes import Event, Activity
+import json
+import qrcode
+from io import BytesIO
 
 class UserClass:
     def __init__(self, user_id: int = None,
@@ -19,29 +22,8 @@ class UserClass:
         self.phone_number = phone
         self.is_admin = is_admin
 
-    async def generate_qr_code(self, event: Event | Activity, filename="qrcode.png"):
-        data = {
-            "user": {
-                "user_id": self.user_id,
-                "name": self.username,
-                "phone": self.phone_number
-            },
-            "event": {
-                "event_id": event.id,
-                "event_type": "Event" if event is Event else "Activity",
-                "event_name": event.name if event is Activity else event.title
-            }
-        }
+    import json
+    import qrcode
+    from io import BytesIO
 
-        data_json = json.dumps(data)
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=10,
-            border=4,
-        )
-        qr.add_data(data_json)
-        qr.make(fit=True)
-        img = qr.make_image(fill_color="black", back_color="white")
-        img.save(filename)
-        return os.path.abspath(filename), data_json
+

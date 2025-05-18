@@ -11,10 +11,12 @@ if TYPE_CHECKING:
 @dataclass
 class Activity:
     _name: str = field(init=True)
-    _location: Optional[str] = field(init=True)
+    _location: Optional[str] = field(init=False)
     _start_time: datetime = field(init=True)
-    _end_time: datetime = field(init=True)
-    _link: Optional[str] = field(init=True)
+    _end_time: datetime = field(init=False)
+    _description: str = field(init=True)
+    _vacant_places: int = field(init=True)
+    _link: Optional[str] = field(init=False)
     _event: 'Event' = field(init=True)
     _attendees: Dict[int, bool] = field(default_factory=dict)
     _id: str = field(init=True, default=None)
