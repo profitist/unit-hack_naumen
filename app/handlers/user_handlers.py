@@ -64,6 +64,24 @@ async def cmd_start(message: Message, command: CommandObject):
         )
 
 
+@user_router.callback_query(F.data.startswith('reg_on_event_'))
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    event_id = int(callback.data.removeprefix('reg_on_event_'))
+    tg_id = callback.from_user.id
+    user_id = await rq.user_id_by_tg_id(tg_id)
+    add_succses = await rq.add_user_on_event(user_id, event_id)
+    if add_succses:
+        await callback.answer(f'Вы зарегистрированы на событие')
+    else:
+        await callback.answer('К сожалению, мест нет, добавили вас в лист ожидания')
+        await rq.add_to_event_waiting_list(user_id, event_id)
+
+
+
+
+
+
+
 @user_router.message(Command("help"))
 async def get_help(message: Message):
     await message.answer("help")
