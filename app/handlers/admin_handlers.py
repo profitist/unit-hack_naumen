@@ -315,6 +315,13 @@ async def add_faq_question(message: Message, state: FSMContext):
     await state.set_state(FaqAdd.message)
 
 
+@admin_router.message(F.text == 'Проверить QR-код')
+@admin_required
+async def add_user_by_qr(message: Message, state: FSMContext):
+    await message.answer('📸 Сфотографируй QR-код и отправь его в чат')
+    await state.set_state()
+
+
 @admin_router.message(FaqAdd.message)
 @admin_required
 async def add_faq_answer(message: Message, state: FSMContext):
