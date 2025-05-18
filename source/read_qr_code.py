@@ -1,14 +1,16 @@
 import json
+from io import BytesIO
 from PIL import Image, ImageEnhance, ImageFilter
 from pyzbar.pyzbar import decode
 
 
-def read_qr_code(image_path):
+def read_qr_code_from_bytes(image_bytes: bytes):
     """
-    Возвращает расшифрованный json с qr-кода
+    Принимает последовательность байт изображения,
+    возвращает расшифрованный JSON с QR-кода (или None).
     """
     try:
-        img = Image.open(image_path).convert("L")
+        img = Image.open(BytesIO(image_bytes)).convert("L")
 
         enhancer = ImageEnhance.Contrast(img)
         img = enhancer.enhance(2.0)
