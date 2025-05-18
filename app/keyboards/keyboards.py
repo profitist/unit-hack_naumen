@@ -48,6 +48,13 @@ reply_test = ReplyKeyboardMarkup(
 async def inline_event_description(event_id: int):
     keyboard = InlineKeyboardBuilder()
     keyboard.add(InlineKeyboardButton(text='Зарегистрироваться', callback_data=f'reg_on_event_{event_id}'))
+    keyboard.add(InlineKeyboardButton(text='Мастерклассы', callback_data=f'activity_of_event_{event_id}'))
+    return keyboard.adjust(1).as_markup()
+
+
+async def inline_masterclass_description(masterclass_id: int):
+    keyboard = InlineKeyboardBuilder()
+    keyboard.add(InlineKeyboardButton(text='Зарегистрироваться', callback_data=f'reg_on_masterclass_{masterclass_id}'))
     return keyboard.adjust(1).as_markup()
 
 
