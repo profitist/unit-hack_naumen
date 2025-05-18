@@ -32,6 +32,54 @@ async def add_user_if_not_exists(user_instance: UserClass) -> User:
             return existing_user
 
 
+async def add_user_on_event(user_id: int, event_id: int) -> bool:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            try:
+                event = await session.execute(
+                    select(Event)
+                    .where(
+                        and_(
+                            Event.id == event_id,
+                            Event.datetime >= datetime.now(),
+                            Event.vacant_places > 0
+                        )
+                    )
+                )
+                event = event.scalar_one_or_none()
+
+                if event is None:
+                    return False
+                existing_reg = await session.execute(
+                    select(UserEventConnect)
+                    .where(
+                        and_(
+                            UserEventConnect.user_id == user_id,
+                            UserEventConnect.event_id == event_id
+                        )
+                    )
+                )
+
+                if existing_reg.scalar_one_or_none() is not None:
+                    return False
+                new_reg = UserEventConnect(
+                    user_id=user_id,
+                    event_id=event_id,
+                    date_of_registration=datetime.now()
+                )
+                session.add(new_reg)
+                event.vacant_places -= 1
+
+                await session.commit()
+                return True
+
+            except Exception as e:
+                await session.rollback()
+                print(f"Error registering user: {e}")
+                return False
+
+
+
 async def add_event_if_not_exists(event_instance: EventDTO) -> Event:
     async with AsyncSessionLocal() as session:
         async with session.begin():
